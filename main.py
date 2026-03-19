@@ -16,8 +16,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-EB_API_KEY = os.environ.get("EB_API_KEY", "")
-EB_BASE    = "https://api.easybroker.com/v1"
+EB_API_KEY   = os.environ.get("EB_API_KEY", "")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+EB_BASE      = "https://api.easybroker.com/v1"
+GROQ_BASE    = "https://api.groq.com/openai/v1"
 
 # ── CACHE EN MEMORIA (TTL 6h) ──
 _cache: dict = {}
@@ -43,6 +45,38 @@ def eb_headers():
 @app.get("/")
 def root():
     return {"status": "Brokr API activa", "version": "4.0"}
+
+# ────────────────────────────────────────────
+# GROQ CHAT PROXY
+# ────────────────────────────────────────────
+class ChatRequest(BaseModel):
+    messages: list
+    model: str = "llama-3.3-70b-versatile"
+    max_tokens: int = 1024
+    temperature: float = 0.7
+
+@app.post("/chat")
+async def chat_proxy(req: ChatRequest):
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY no configurada en el servidor")
+    async with httpx.AsyncClient(timeout=30) as client:
+        r = await client.post(
+            f"{GROQ_BASE}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model":       req.model,
+                "messages":    req.messages,
+                "max_tokens":  req.max_tokens,
+                "temperature": req.temperature,
+            }
+        )
+        if r.status_code != 200:
+            raise HTTPException(status_code=r.status_code,
+                detail=f"Error Groq: {r.text}")
+        return r.json()
 
 @app.get("/propiedad/{property_id}")
 async def get_propiedad(property_id: str):
