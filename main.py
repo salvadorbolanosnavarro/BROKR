@@ -602,3 +602,52 @@ async def calcular_avm(req: AVMRequest):
                  "y avalúo formal."),
         "timestamp": time.strftime("%Y-%m-%d %H:%M"),
     }
+
+
+# ────────────────────────────────────────────
+# CONTRATOS
+# ────────────────────────────────────────────
+from fastapi.responses import FileResponse
+import tempfile, os, subprocess, json as _json
+
+class ContratoRequest(BaseModel):
+    tipo: str   # arrendamiento | promesa
+    datos: dict
+
+@app.post("/contrato")
+async def generar_contrato(req: ContratoRequest):
+    """Generate a DOCX contract from form data."""
+    # Write datos to temp JSON
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        _json.dump(req.datos, f, ensure_ascii=False)
+        json_path = f.name
+
+    output_path = json_path.replace('.json', '.docx')
+
+    try:
+        script = os.path.join(os.path.dirname(__file__), 'generar_contrato.py')
+        result = subprocess.run(
+            ['python3', script, req.tipo, json_path, output_path],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode != 0:
+            raise HTTPException(status_code=500,
+                detail=f"Error generando contrato: {result.stderr}")
+
+        nombres = {
+            'arrendamiento': 'Contrato_Arrendamiento.docx',
+            'promesa': 'Promesa_Compraventa.docx',
+        }
+        filename = nombres.get(req.tipo, 'Contrato.docx')
+
+        return FileResponse(
+            output_path,
+            media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            filename=filename,
+            background=None
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        try: os.unlink(json_path)
+        except: pass
