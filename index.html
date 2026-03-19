@@ -197,6 +197,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--txt);di
 .prop-act-ficha:hover{background:var(--teal2)}
 
 /* MODAL */
+
+/* DETAIL MODAL */
+.prop-detail-box{max-width:860px}
+.detail-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:20px}
+.detail-gallery img{width:100%;height:160px;object-fit:cover;border-radius:var(--r2);cursor:pointer}
+.detail-gallery img:first-child{grid-column:1/-1;height:300px}
+.detail-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.detail-info-item{background:var(--gray);border-radius:var(--r2);padding:12px}
+.detail-info-item label{font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+.detail-info-item span{font-size:14px;font-weight:600;color:var(--navy)}
+.detail-desc{background:var(--gray);border-radius:var(--r2);padding:14px;font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:16px}
+.detail-price-hero{font-size:28px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.detail-loc{font-size:13px;color:var(--mut);margin-bottom:16px}
+/* Photo upload preview */
+.foto-preview-item{position:relative;width:80px;height:80px}
+.foto-preview-item img{width:100%;height:100%;object-fit:cover;border-radius:var(--r2)}
+.foto-preview-item button{position:absolute;top:-6px;right:-6px;background:#e53e3e;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+@media(max-width:768px){
+  .detail-info-grid{grid-template-columns:1fr 1fr}
+  .detail-gallery img:first-child{height:220px}
+}
 .prop-modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
   display:flex;align-items:center;justify-content:center;padding:20px;
@@ -675,11 +696,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--txt);di
           </div>
         </div>
 
-        <div class="pf-section">Fotos (URLs separadas por coma)</div>
+        <div class="pf-section">Fotos</div>
         <div class="pf-row">
           <div class="pf-field full">
-            <label>URLs de fotos</label>
-            <textarea name="fotos_raw" rows="2" placeholder="https://url1.jpg, https://url2.jpg"></textarea>
+            <label>Subir fotos (puedes seleccionar varias a la vez)</label>
+            <input type="file" id="fotos-upload" accept="image/*" multiple style="padding:8px;border:2px dashed var(--gray2);border-radius:var(--r2);background:var(--gray);cursor:pointer;font-size:13px"/>
+            <div id="fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+            <div id="fotos-progress" style="font-size:12px;color:var(--mut);margin-top:4px"></div>
+            <input type="hidden" name="fotos_raw" id="fotos-raw-hidden"/>
           </div>
         </div>
 
@@ -704,6 +728,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--txt);di
   </div>
 </div>
 
+
+<!-- ═══════════════════════════════════════════
+     MODAL: DETALLE DE PROPIEDAD
+═══════════════════════════════════════════ -->
+<div id="prop-detail-modal" class="prop-modal-overlay" style="display:none" onclick="closePropDetail(event)">
+  <div class="prop-modal-box prop-detail-box" onclick="event.stopPropagation()">
+    <div class="prop-modal-hdr">
+      <h3 id="detail-title">Detalle</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="prop-act-btn prop-act-edit" style="padding:6px 14px;font-size:12px" id="detail-edit-btn">✏️ Editar</button>
+        <button onclick="closePropDetail()" class="prop-modal-close">✕</button>
+      </div>
+    </div>
+    <div class="prop-modal-body" id="detail-body"></div>
+  </div>
+</div>
 </main>
 
 <script>
@@ -1211,7 +1251,7 @@ function renderProps(props){
     if(p.recamaras) specs.push(`<span>🛏 ${p.recamaras}</span>`);
     if(p.banos)     specs.push(`<span>🚿 ${p.banos}</span>`);
     if(p.m2_construccion) specs.push(`<span>📐 ${p.m2_construccion}m²</span>`);
-    return `<div class="prop-card">
+    return `<div class="prop-card" onclick="openPropDetail('${p.id}')">
       <div class="prop-card-img">${foto}</div>
       <div class="prop-card-body">
         <div class="prop-card-badges">
@@ -1269,6 +1309,24 @@ function openPropForm(id){
     form.elements['prop_id'].value = '';
   }
   modal.style.display = 'flex';
+  // Init photo upload
+  initFotoUpload();
+  // If editing, show existing photos
+  if(id) {
+    const p = allProps.find(x => x.id === id);
+    if(p && p.fotos && p.fotos.length) {
+      uploadedFotoUrls = [...p.fotos];
+      const preview = document.getElementById('fotos-preview');
+      p.fotos.forEach((url, idx) => {
+        const div = document.createElement('div');
+        div.className = 'foto-preview-item';
+        div.innerHTML = `<img src="${url}"/><button onclick="removeFoto(${idx},this.parentElement)" title="Eliminar">✕</button>`;
+        preview.appendChild(div);
+      });
+      document.getElementById('fotos-raw-hidden').value = uploadedFotoUrls.join(',');
+      document.getElementById('fotos-progress').textContent = `${p.fotos.length} foto(s) existente(s)`;
+    }
+  }
 }
 
 function closePropModal(e){
@@ -1283,9 +1341,10 @@ async function saveProp(e){
   const data = {};
   fd.forEach((v,k) => { if(v !== '') data[k] = v; });
   // Parse fotos
+  // Use uploaded URLs (from Supabase Storage upload)
   const fotosRaw = (data.fotos_raw || '').split(',').map(s=>s.trim()).filter(Boolean);
   delete data.fotos_raw;
-  data.fotos = fotosRaw;
+  data.fotos = fotosRaw.length ? fotosRaw : uploadedFotoUrls;
   // Parse numbers
   ['precio','m2_construccion','m2_terreno','recamaras','banos','estacionamientos','anio_construccion'].forEach(k => {
     if(data[k]) data[k] = Number(data[k]);
@@ -1328,6 +1387,113 @@ async function deleteProp(id){
     if(badge) badge.textContent = data.length;
   } catch(e){}
 })();
+
+
+// ══════════════════════════════
+// PHOTO UPLOAD TO SUPABASE STORAGE
+// ══════════════════════════════
+let uploadedFotoUrls = [];
+
+function initFotoUpload() {
+  const input = document.getElementById('fotos-upload');
+  if(!input) return;
+  uploadedFotoUrls = [];
+  document.getElementById('fotos-preview').innerHTML = '';
+  document.getElementById('fotos-raw-hidden').value = '';
+  input.addEventListener('change', handleFotoFiles);
+}
+
+async function handleFotoFiles(e) {
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  const progress = document.getElementById('fotos-progress');
+  const preview  = document.getElementById('fotos-preview');
+  progress.textContent = 'Subiendo fotos...';
+  for(let i = 0; i < files.length; i++) {
+    const file = files[i];
+    progress.textContent = `Subiendo ${i+1} de ${files.length}: ${file.name}`;
+    try {
+      const ext  = file.name.split('.').pop().toLowerCase();
+      const name = `prop_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const r = await fetch(`https://urtgysmtnvoqaljuhntz.supabase.co/storage/v1/object/fotos-propiedades/${name}`, {
+        method: 'POST',
+        headers: {
+          'apikey': 'sb_publishable_EVGLfmHVorBpQQWAh-vypA_hANNk_-i',
+          'Authorization': 'Bearer sb_publishable_EVGLfmHVorBpQQWAh-vypA_hANNk_-i',
+          'Content-Type': file.type,
+          'x-upsert': 'true',
+        },
+        body: file
+      });
+      if(!r.ok) throw new Error(await r.text());
+      const url = `https://urtgysmtnvoqaljuhntz.supabase.co/storage/v1/object/public/fotos-propiedades/${name}`;
+      uploadedFotoUrls.push(url);
+      // Show preview
+      const div = document.createElement('div');
+      div.className = 'foto-preview-item';
+      const idx = uploadedFotoUrls.length - 1;
+      div.innerHTML = `<img src="${url}"/><button onclick="removeFoto(${idx},this.parentElement)" title="Eliminar">✕</button>`;
+      preview.appendChild(div);
+    } catch(err) {
+      progress.textContent = `Error subiendo ${file.name}: ${err.message}`;
+      return;
+    }
+  }
+  progress.textContent = `✓ ${uploadedFotoUrls.length} foto(s) subida(s) correctamente`;
+  document.getElementById('fotos-raw-hidden').value = uploadedFotoUrls.join(',');
+}
+
+function removeFoto(idx, el) {
+  uploadedFotoUrls.splice(idx, 1);
+  el.remove();
+  document.getElementById('fotos-raw-hidden').value = uploadedFotoUrls.join(',');
+}
+
+// ══════════════════════════════
+// DETALLE DE PROPIEDAD
+// ══════════════════════════════
+function openPropDetail(id) {
+  const p = allProps.find(x => x.id === id);
+  if(!p) return;
+  document.getElementById('detail-title').textContent = p.titulo;
+  document.getElementById('detail-edit-btn').onclick = () => {
+    closePropDetail();
+    openPropForm(id);
+  };
+  const fotos = p.fotos && p.fotos.length ? p.fotos : [];
+  const gallery = fotos.length
+    ? `<div class="detail-gallery">${fotos.map(f => `<img src="${f}" onclick="window.open('${f}','_blank')" />`).join('')}</div>`
+    : '<div style="height:160px;background:var(--gray);border-radius:var(--r2);display:flex;align-items:center;justify-content:center;color:var(--mut);margin-bottom:20px">Sin fotos</div>';
+
+  const specs = [
+    {l:'Tipo', v:p.tipo},
+    {l:'Operación', v:p.operacion},
+    {l:'Estatus', v:p.estatus},
+    {l:'M² Construcción', v:p.m2_construccion ? p.m2_construccion+'m²' : '—'},
+    {l:'M² Terreno', v:p.m2_terreno ? p.m2_terreno+'m²' : '—'},
+    {l:'Recámaras', v:p.recamaras || '—'},
+    {l:'Baños', v:p.banos || '—'},
+    {l:'Estacionamientos', v:p.estacionamientos || '—'},
+    {l:'Año construcción', v:p.anio_construccion || '—'},
+  ];
+
+  document.getElementById('detail-body').innerHTML = `
+    ${gallery}
+    <div class="detail-price-hero">${fmt_precio(p.precio, p.moneda)}</div>
+    <div class="detail-loc">📍 ${[p.calle, p.colonia, p.ciudad, p.estado].filter(Boolean).join(', ')}</div>
+    ${p.descripcion ? `<div class="detail-desc">${p.descripcion}</div>` : ''}
+    <div class="detail-info-grid">
+      ${specs.map(s => `<div class="detail-info-item"><label>${s.l}</label><span>${s.v}</span></div>`).join('')}
+    </div>
+    ${p.notas ? `<div style="background:#fff9e6;border-radius:var(--r2);padding:12px;font-size:12px;color:#92400e"><strong>📝 Notas internas:</strong> ${p.notas}</div>` : ''}
+  `;
+  document.getElementById('prop-detail-modal').style.display = 'flex';
+}
+
+function closePropDetail(e) {
+  if(e && e.target !== document.getElementById('prop-detail-modal')) return;
+  document.getElementById('prop-detail-modal').style.display = 'none';
+}
 
 function toggleVoice(){
   if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
