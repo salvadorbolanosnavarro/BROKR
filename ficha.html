@@ -55,9 +55,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
 }
 
 /* Cover */
-.ficha-cover{width:100%;height:297mm;position:relative;display:flex;flex-direction:column}
-.cover-hero{width:100%;height:62%;object-fit:cover;display:block;flex-shrink:0}
-.cover-hero-bg{width:100%;height:62%;background:linear-gradient(135deg,var(--navy2),var(--navy3));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ficha-cover{width:100%;min-height:297mm;position:relative;display:flex;flex-direction:column}
+.cover-hero{width:100%;height:185mm;object-fit:cover;display:block;flex-shrink:0}
+.cover-hero-bg{width:100%;height:185mm;background:linear-gradient(135deg,var(--navy2),var(--navy3));display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .cover-overlay{position:absolute;top:0;left:0;right:0;height:62%;background:linear-gradient(to bottom,rgba(15,24,41,.25) 0%,rgba(15,24,41,.72) 100%)}
 
 /* Brand area top-left (agente) */
@@ -89,7 +89,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
   padding:5px 14px;border-radius:20px;
 }
 .cover-price-block{
-  position:absolute;bottom:38.5%;left:0;right:0;
+  position:absolute;bottom:0;left:0;right:0;transform:translateY(-115%);
   padding:0 24px 18px;
 }
 .cover-precio{
@@ -99,7 +99,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
 .cover-titulo{font-size:15px;font-weight:400;color:rgba(255,255,255,.85);margin-bottom:5px}
 .cover-ubicacion{font-size:12.5px;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:4px}
 
-.cover-body{flex:1;padding:22px 24px 60px;background:var(--wh)}
+.cover-body{flex:1;padding:22px 24px 22px;background:var(--wh)}
 .cover-specs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .spec-item{text-align:center;padding:12px 6px;background:var(--silver);border-radius:8px}
 .spec-ico{font-size:17px;margin-bottom:3px}
@@ -182,7 +182,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
   body{background:#fff}
   #app-ui{display:none!important}
   #ficha{display:block!important}
-  .ficha-page{box-shadow:none;margin:0;page-break-after:always}
+  .ficha-page{
+    box-shadow:none;margin:0;
+    page-break-after:always;
+    page-break-inside:avoid;
+  }
+  .ficha-cover{
+    min-height:auto;
+    page-break-inside:avoid;
+  }
   .ficha-page:last-child{page-break-after:avoid}
   @page{size:A4;margin:0}
 }
