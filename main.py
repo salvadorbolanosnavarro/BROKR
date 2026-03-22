@@ -647,6 +647,7 @@ import tempfile, os, subprocess, json as _json
 class ContratoRequest(BaseModel):
     tipo: str   # arrendamiento | promesa
     datos: dict
+    clausulas_especiales: list = []  # plain-language clauses to be drafted by AI
 
 
 @app.get("/img")
@@ -672,10 +673,54 @@ async def proxy_image(url: str):
 
 @app.post("/contrato")
 async def generar_contrato(req: ContratoRequest):
-    """Generate a DOCX contract from form data."""
+    """Generate a DOCX contract from form data, with AI-drafted special clauses."""
+
+    # ── STEP 1: Draft special clauses with AI (abogado mexicano) ──
+    clausulas_redactadas = []
+    if req.clausulas_especiales:
+        tipo_label = "arrendamiento" if req.tipo == "arrendamiento" else "promesa de compraventa"
+        prompt_clausulas = f"""Eres un abogado especialista en derecho inmobiliario mexicano con 20 años de experiencia redactando contratos conforme al Código Civil Federal y los códigos civiles estatales.
+
+El usuario quiere incluir las siguientes cláusulas especiales en un contrato de {tipo_label}. Para cada una, redacta una cláusula jurídicamente correcta, con lenguaje formal, precisa y ejecutable ante tribunales mexicanos. Usa numeración romana (PRIMERA ESPECIAL, SEGUNDA ESPECIAL, etc.).
+
+No incluyas explicaciones ni comentarios — solo la cláusula redactada lista para insertarse en el contrato.
+
+Cláusulas a redactar:
+""" + "
+".join(f"{i+1}. {c}" for i, c in enumerate(req.clausulas_especiales))
+
+        try:
+            import httpx
+            headers = {
+                "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY','')}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt_clausulas}],
+                "max_tokens": 2000,
+                "temperature": 0.3
+            }
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers=headers, json=payload
+                )
+            if r.status_code == 200:
+                ai_text = r.json()["choices"][0]["message"]["content"].strip()
+                clausulas_redactadas = [ai_text]
+        except Exception as e:
+            print(f"AI clause drafting error: {e}")
+            # Fallback: use plain text
+            clausulas_redactadas = req.clausulas_especiales
+
+    # ── STEP 2: Write datos + clausulas to temp JSON ──
+    datos_completos = dict(req.datos)
+    datos_completos["clausulas_especiales"] = clausulas_redactadas
+
     # Write datos to temp JSON
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        _json.dump(req.datos, f, ensure_ascii=False)
+        _json.dump(datos_completos, f, ensure_ascii=False)
         json_path = f.name
 
     output_path = json_path.replace('.json', '.docx')

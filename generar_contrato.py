@@ -486,6 +486,24 @@ def generar_arrendamiento(d, output_path):
             tcBorders.append(border)
             tcPr.append(tcBorders)
 
+
+    # ── CLÁUSULAS ESPECIALES REDACTADAS POR IA ──
+    clausulas_esp = datos.get('clausulas_especiales', [])
+    if clausulas_esp:
+        p(doc, '', space_before=12)
+        p(doc, 'CLÁUSULAS ESPECIALES', bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, size=11)
+        p(doc, '', space_before=4)
+        for cl_text in clausulas_esp:
+            if cl_text.strip():
+                # Each clause block — already formatted by AI
+                for line in cl_text.strip().split('\n'):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    is_header = (line.isupper() and len(line) < 60) or line.endswith('.-')
+                    p(doc, line, bold=is_header, space_before=(8 if is_header else 0))
+        p(doc, '', space_before=6)
+
     doc.save(output_path)
     print(f"✓ Contrato de arrendamiento generado: {output_path}")
 
@@ -686,6 +704,24 @@ def generar_promesa(d, output_path):
             border.set(qn('w:val'), 'none')
             tcBorders.append(border)
             tcPr.append(tcBorders)
+
+
+    # ── CLÁUSULAS ESPECIALES REDACTADAS POR IA ──
+    clausulas_esp = datos.get('clausulas_especiales', [])
+    if clausulas_esp:
+        p(doc, '', space_before=12)
+        p(doc, 'CLÁUSULAS ESPECIALES', bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, size=11)
+        p(doc, '', space_before=4)
+        for cl_text in clausulas_esp:
+            if cl_text.strip():
+                # Each clause block — already formatted by AI
+                for line in cl_text.strip().split('\n'):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    is_header = (line.isupper() and len(line) < 60) or line.endswith('.-')
+                    p(doc, line, bold=is_header, space_before=(8 if is_header else 0))
+        p(doc, '', space_before=6)
 
     doc.save(output_path)
     print(f"✓ Promesa de compraventa generada: {output_path}")
