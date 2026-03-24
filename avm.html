@@ -283,9 +283,14 @@ async function buscar() {
     mostrarResultados(colonia);
   } catch(err) {
     mostrarError(
-      `No se pudo completar la búsqueda.<br><small>${err.message}</small><br><br>
-      <small>Verifica que tu <strong>API Key</strong> y <strong>Search Engine ID</strong> sean correctos
-      y que la API de Custom Search esté activada en tu proyecto de Google.</small>`
+      `No se pudo completar la búsqueda.<br><small style="opacity:.8">${err.message}</small><br><br>
+      <small>
+        <strong>Pasos para resolverlo:</strong><br>
+        1. Ve a <a href="https://console.cloud.google.com/apis/library/customsearch.googleapis.com" target="_blank" style="color:#1D9E75">Google Cloud Console</a><br>
+        2. Busca <strong>"Custom Search JSON API"</strong> y haz clic en <strong>"Habilitar"</strong><br>
+        3. Verifica que tu API Key corresponde al mismo proyecto donde habilitaste la API<br>
+        4. En "Configurar credenciales de Google" arriba, vuelve a guardar tu API Key y Search Engine ID
+      </small>`
     );
   } finally {
     document.getElementById('loading').style.display = 'none';
