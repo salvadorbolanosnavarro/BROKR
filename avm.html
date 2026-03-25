@@ -140,19 +140,50 @@
 
   <!-- Búsqueda -->
   <div class="card">
-    <div class="form-row">
-      <div class="field">
-        <label>Colonia / Fraccionamiento</label>
-        <input type="text" id="colonia" placeholder="Ej. Fraccionamiento Los Pinos">
-      </div>
-      <div class="field">
-        <label>Ciudad</label>
-        <input type="text" id="ciudad" placeholder="Ej. Morelia">
-      </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label>Ciudad</label>
+      <input type="text" id="ciudad" placeholder="Ej. Morelia">
     </div>
-    <button class="btn-buscar" id="btn-buscar" onclick="buscar()">Buscar comparables</button>
+
+    <div class="field">
+      <label>Estado</label>
+      <input type="text" id="estado" placeholder="Ej. Michoacán">
+    </div>
   </div>
 
+  <div class="form-row">
+    <div class="field">
+      <label>Colonia</label>
+      <input type="text" id="colonia" placeholder="Ej. Altozano">
+    </div>
+
+    <div class="field">
+      <label>Tipo de inmueble</label>
+      <select id="tipo">
+        <option value="casa">Casa</option>
+        <option value="departamento">Departamento</option>
+        <option value="terreno">Terreno</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label>m² terreno</label>
+      <input type="number" id="m2t" placeholder="Ej. 160">
+    </div>
+
+    <div class="field">
+      <label>m² construcción (opcional)</label>
+      <input type="number" id="m2c" placeholder="Ej. 220">
+    </div>
+  </div>
+
+  <button class="btn-buscar" id="btn-buscar" onclick="buscar()">Buscar comparables</button>
+
+</div>
   <!-- Estado -->
   <div class="loading" id="loading">
     <div class="spinner"></div>
