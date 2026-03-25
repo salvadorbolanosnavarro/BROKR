@@ -116,27 +116,6 @@
     <p class="subtitulo">Busca propiedades en venta dentro de una colonia específica.</p>
   </div>
 
-  <!-- Credenciales -->
-  <div class="card">
-    <div class="cred-toggle" id="cred-toggle" onclick="toggleCred()">
-      <span class="arrow">▶</span>
-      <span id="cred-label">⚙️ Configurar credenciales de Google</span>
-    </div>
-    <div class="cred-body" id="cred-body">
-      <div class="cred-row" style="margin-bottom:14px">
-        <div class="field">
-          <label>API Key de Google</label>
-          <input type="password" id="api-key" placeholder="AIzaSy...">
-        </div>
-        <div class="field">
-          <label>Search Engine ID (cx)</label>
-          <input type="text" id="cx" placeholder="a1b2c3...">
-        </div>
-      </div>
-      <button class="btn-primary" onclick="guardarCred()">Guardar en este navegador</button>
-      <p class="aviso">Tus credenciales se guardan solo en tu navegador. Nadie más puede verlas.</p>
-    </div>
-  </div>
 
   <!-- Búsqueda -->
   <div class="card">
@@ -212,27 +191,6 @@
 </div>
 
 <script>
-// ── Credenciales ──────────────────────────────
-function cargarCred() {
-  const k = localStorage.getItem('avm_api_key') || '';
-  const c = localStorage.getItem('avm_cx') || '';
-  document.getElementById('api-key').value = k;
-  document.getElementById('cx').value = c;
-  if (k && c) document.getElementById('cred-label').textContent = '✅ Credenciales configuradas';
-}
-function guardarCred() {
-  const k = document.getElementById('api-key').value.trim();
-  const c = document.getElementById('cx').value.trim();
-  if (!k || !c) { alert('Ingresa ambas credenciales antes de guardar.'); return; }
-  localStorage.setItem('avm_api_key', k);
-  localStorage.setItem('avm_cx', c);
-  document.getElementById('cred-label').textContent = '✅ Credenciales configuradas';
-  toggleCred();
-}
-function toggleCred() {
-  document.getElementById('cred-body').classList.toggle('visible');
-  document.getElementById('cred-toggle').classList.toggle('open');
-}
 
 // ── Regex ─────────────────────────────────────
 function limpiarNum(t) {
@@ -271,13 +229,7 @@ let resultadosGlobales = [];
 async function buscar() {
   const colonia = document.getElementById('colonia').value.trim();
   const ciudad  = document.getElementById('ciudad').value.trim();
-  const apiKey  = 'AIzaSyAYGD6EWS-C7UurkaJcrEduStZoFZbL1og';
-  const cx      = '632fef4f5a41441d4';
 
-  if (!apiKey || !cx) {
-    mostrarError('Primero configura tus credenciales de Google en la sección de arriba y haz clic en <strong>Guardar</strong>.');
-    return;
-  }
   if (!colonia || !ciudad) {
     mostrarError('Ingresa la colonia/fraccionamiento y la ciudad.');
     return;
@@ -387,7 +339,6 @@ function ocultarTodo() {
   document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); })
 );
 
-cargarCred();
 </script>
 </body>
 </html>
