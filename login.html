@@ -24,7 +24,8 @@
   --radius:12px;
 }
 
-html,body{height:100%;background:var(--navy);font-family:'DM Sans',sans-serif;color:var(--white);overflow:hidden}
+html,body{min-height:100%;background:var(--navy);font-family:'DM Sans',sans-serif;color:var(--white);}
+body{overflow-y:auto;}
 
 /* Background mesh */
 .bg{
@@ -269,11 +270,11 @@ async function doLogin(){
   
   if(data.error){ showMsg(data.error_description || data.error); return; }
   
-  // Estas son tus llaves originales
+  // Guardar en ambos para máxima compatibilidad
+  localStorage.setItem('sb_token', data.access_token);
+  localStorage.setItem('sb_user', JSON.stringify(data.user));
   sessionStorage.setItem('sb_token', data.access_token);
   sessionStorage.setItem('sb_user', JSON.stringify(data.user));
-  
-  // 👇 ESTA ES LA LÍNEA NUEVA QUE EVITA EL REBOTE 👇
   localStorage.setItem('sesion_activa', 'true');
   
   await checkProfileAndRedirect(data.access_token, data.user);

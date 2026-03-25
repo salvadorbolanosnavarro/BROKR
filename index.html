@@ -118,7 +118,7 @@ body{
   gap:8px;
 }
 #nav-logo:hover{background:rgba(255,255,255,.05)}
-#nav-logo img{height:22px;width:auto}
+#nav-logo img{height:32px;width:auto}
 
 /* Module tabs */
 #nav-tabs{
@@ -2048,6 +2048,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .fichas-tab { flex:1; padding:13px 16px; background:none; border:none; color:var(--mut); font-family:inherit;
       font-size:13px; font-weight:600; cursor:pointer; border-bottom:2.5px solid transparent;
       transition:all .15s; display:flex; align-items:center; justify-content:center; gap:7px; }
+    .fichas-tab span { display:inline !important; }
     .fichas-tab.active { color:var(--sky2); border-bottom-color:var(--sky); background:rgba(14,165,233,.06); }
     .fichas-tab:hover:not(.active) { color:var(--txt); background:rgba(255,255,255,.04); }
     .fichas-pane { flex:1; display:none; flex-direction:column; overflow:hidden; }
@@ -2090,10 +2091,13 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('ftab-'+t)?.classList.toggle('active', t===tab);
       document.getElementById('fpane-'+t)?.classList.toggle('active', t===tab);
     });
-    // Lazy load EasyBroker iframe
+    // Lazy load EasyBroker iframe (usar data-loaded para evitar blank al regresar)
     if(tab==='eb'){
       const ifr = document.getElementById('iframe-ficha-eb');
-      if(ifr && !ifr.src) ifr.src = 'ficha.html';
+      if(ifr && !ifr.getAttribute('data-loaded')){
+        ifr.src = 'ficha.html';
+        ifr.setAttribute('data-loaded','1');
+      }
     }
   };
 
