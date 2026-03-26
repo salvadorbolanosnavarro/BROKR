@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   BROKR® — Servicios compartidos
+   Brokr — Servicios compartidos
    ═══════════════════════════════════════════════════════════
    Este archivo contiene TODA la lógica compartida:
    - Autenticación (Supabase)
