@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   BROKR® — Router de paneles
+   Brokr — Router de paneles
    ═══════════════════════════════════════════════════════════
    Controla qué panel/módulo se muestra.
    
