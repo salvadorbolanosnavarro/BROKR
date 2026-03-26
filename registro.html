@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Brokr — Completa tu perfil</title>
+<title>BROKR® — Completa tu perfil</title>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <meta name="theme-color" content="#0a1628"/>
 <style>
@@ -41,7 +41,7 @@ html,body{min-height:100%;background:var(--navy);font-family:'DM Sans',sans-seri
 <div class="wrap">
   <div class="card">
     <div class="logo-area">
-      <img src="icon-192.png" alt="Brokr"/>
+      <img src="icon-192.png" alt="BROKR®"/>
       <h2>Completa tu perfil</h2>
       <p>Solo necesitamos un par de datos para personalizar tu experiencia.</p>
     </div>
@@ -58,7 +58,7 @@ html,body{min-height:100%;background:var(--navy);font-family:'DM Sans',sans-seri
       <div class="hint">Lo usaremos solo para soporte técnico.</div>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="guardar()">Continuar a Brokr</button>
+    <button class="btn-primary" id="btn-save" onclick="guardar()">Continuar a BROKR®</button>
   </div>
 </div>
 
@@ -112,11 +112,11 @@ async function guardar(){
     console.error('Supabase error:', r.status, errText);
     showMsg(`Error ${r.status}: ${errText}`);
     btn.disabled=false;
-    btn.textContent='Continuar a Brokr';
+    btn.textContent='Continuar a BROKR®';
     return;
   }
 
-  showMsg('Perfil guardado. Cargando Brokr…', 'ok');
+  showMsg('Perfil guardado. Cargando BROKR®…', 'ok');
   setTimeout(() => { window.location.href = 'index.html'; }, 800);
 }
 
