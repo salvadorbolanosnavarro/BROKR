@@ -58,7 +58,7 @@ html,body{min-height:100%;background:var(--navy);font-family:'DM Sans',sans-seri
       <div class="hint">Lo usaremos solo para soporte técnico.</div>
     </div>
 
-    <button class="btn-primary" id="btn-save" onclick="guardar()">Continuar a BROKR®</button>
+    <button class="btn-primary" id="btn-save" onclick="guardar()">Continuar a Brokr</button>
   </div>
 </div>
 
@@ -112,11 +112,11 @@ async function guardar(){
     console.error('Supabase error:', r.status, errText);
     showMsg(`Error ${r.status}: ${errText}`);
     btn.disabled=false;
-    btn.textContent='Continuar a BROKR®';
+    btn.textContent='Continuar a Brokr';
     return;
   }
 
-  showMsg('Perfil guardado. Cargando BROKR®…', 'ok');
+  showMsg('Perfil guardado. Cargando Brokr…', 'ok');
   setTimeout(() => { window.location.href = 'index.html'; }, 800);
 }
 
