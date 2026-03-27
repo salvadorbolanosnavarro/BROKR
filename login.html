@@ -141,6 +141,26 @@ body{overflow-y:auto;}
 </style>
 </head>
 <body>
+<!-- SPLASH SCREEN -->
+<div id="splash" style="
+  position:fixed;inset:0;
+  background:#0a1628;
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;
+  transition:opacity 0.7s ease;
+">
+  <video autoplay muted playsinline style="max-width:360px;width:80%;">
+    <source src="tu-animacion.mp4" type="video/mp4">
+  </video>
+</div>
+<script>
+  const splash = document.getElementById('splash');
+  setTimeout(() => {
+    splash.style.opacity = '0';
+    setTimeout(() => splash.remove(), 700);
+  }, 3500);
+</script>
+
 <div class="bg"></div>
 <div class="bg-grid"></div>
 
