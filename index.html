@@ -230,15 +230,16 @@ body{
   z-index:499;
   cursor:pointer;
 }
-/* On desktop: hovering edge shows hint */
 @media(hover:hover){
   #drawer-edge:hover ~ #profile-drawer,
   #profile-drawer:hover{
     transform:translateX(0);
   }
   #drawer-edge:hover{width:280px}
+  #profile-drawer{
+    transition:transform .25s ease;
+  }
 }
-
 #drawer-overlay{
   display:none;
   position:fixed;inset:0;
