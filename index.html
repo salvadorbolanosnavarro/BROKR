@@ -311,8 +311,7 @@ body{
 #cv-greeting{
   position:absolute;
   top:18px;
-  left:50%;
-  transform:translateX(-50%);
+  right:20px;
   z-index:20;
   text-align:center;
   pointer-events:none;
@@ -1044,11 +1043,10 @@ body{
   ══════════════════════════════════════════ -->
   <div id="main">
 
-    <!-- DASHBOARD -->
+   <!-- DASHBOARD -->
     <div id="dashboard">
       <div id="cv-greeting">
-        <div class="greet-main" id="greet-text">Bienvenido.</div>
-        <div class="greet-sub">Brokr® · Tu plataforma inmobiliaria</div>
+        <div class="greet-main" id="greet-text">¡Hola!</div>
       </div>
       <div class="mod-card c-sky" onclick="setPanel('ficha-manual')">
         <div class="mod-head">
@@ -2163,8 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const periodo = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
       const nombre = (window.userProfile?.nombre || '').split(' ')[0];
       const greetEl = document.getElementById('greet-text');
-      if(greetEl) greetEl.textContent = nombre ? `${periodo}, ${nombre}.` : `${periodo}.`;
-    }
+if(greetEl) greetEl.textContent = nombre ? `¡Hola, ${nombre}! You're the best!` : `¡Hola! You're the best!`;    }
     updateGreeting();
     setTimeout(updateGreeting, 1500);
   }
