@@ -879,6 +879,8 @@ body{
    #close-bar{display:none;position:fixed;top:12px;right:16px;z-index:195}
 #close-bar button{width:34px;height:34px;border-radius:50%;background:rgba(20,30,45,.85);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.75);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 #close-bar button:hover{background:rgba(239,68,68,.35);color:#fff;border-color:rgba(239,68,68,.5)}
+   #hamburger{display:none;position:fixed;top:12px;left:12px;z-index:501;background:none;border:none;font-size:22px;color:#1a3a5c;cursor:pointer;}
+@media(max-width:767px){#hamburger{display:block}}
 </style>
 </head>
 <body>
@@ -886,6 +888,7 @@ body{
 
 <!-- PROFILE DRAWER EDGE TRIGGER (desktop hover zone) -->
 <div id="drawer-edge"></div>
+   <button id="hamburger" onclick="openDrawer()">☰</button>
 
 <!-- PROFILE DRAWER OVERLAY -->
 <div id="drawer-overlay" onclick="closeDrawer()"></div>
