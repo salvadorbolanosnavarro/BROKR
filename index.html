@@ -1740,7 +1740,7 @@ function descargarPDF(){
 // CHAT
 // ══════════════════════════════════════════
 let msgs = [], busy = false;
-const BAV = `<img src="icon-192.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">`;
+const BAV = `<img src="icon-192.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;background:#fff;">`;
 function onKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
 function resize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
 
