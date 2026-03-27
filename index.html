@@ -2081,12 +2081,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('close-bar').style.display = 'none';
   authInit().then(() => { if(typeof updateGreeting === 'function') updateGreeting(); });
 });
-   // ── SALUDO DINÁMICO ──
-  window.updateGreeting = function(){
-    const nombre = (window.userProfile?.nombre || '').split(' ')[0];
-    const greetEl = document.getElementById('greet-text');
-    if(greetEl) greetEl.textContent = nombre ? `¡Hola, ${nombre}! You're the best!` : '¡Hola!';
-  };
 
   // ── CARRUSEL VERTICAL DASHBOARD ──
 (function(){
