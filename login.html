@@ -323,11 +323,7 @@ async function doSignup(){
   }
 }
 
-async function doGoogle(){
-  const r = await fetch(`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin+'/index.html')}`, {
-    headers:{'apikey':SB_KEY}
-  });
-  // Redirect to Google OAuth
+function doGoogle(){
   window.location.href = `${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin+'/index.html')}`;
 }
 
