@@ -105,7 +105,7 @@ html, body {
 .proto-screen::-webkit-scrollbar { display: none; }
 
 /* ══ HOME SCREEN ══ */
-#screen-home { background: var(--screen-bg); padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+#screen-home { background: var(--screen-bg); padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
 
 .home-header {
   background: var(--navy);
@@ -256,7 +256,7 @@ html, body {
 .act-time { margin-left: auto; font-size: 11px; color: var(--gray-400); white-space: nowrap; }
 
 /* ══ MÓDULOS SCREEN ══ */
-#screen-modules { background: var(--screen-bg); padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+#screen-modules { background: var(--screen-bg); padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
 
 .modules-header {
   background: var(--navy);
@@ -304,7 +304,7 @@ html, body {
 .cat-purple .cat-mod-icon { background: rgba(139,92,246,0.12); }
 
 /* ══ PERFIL SCREEN ══ */
-#screen-profile { background: var(--screen-bg); padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+#screen-profile { background: var(--screen-bg); padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
 
 .profile-header {
   background: var(--navy);
@@ -631,37 +631,24 @@ html, body {
 /* ══ IFRAME PANELS ══ */
 .iframe-panel { width: 100%; height: 100%; border: none; display: block; flex: 1; }
 
-.shaark-screen {
-  background: var(--navy) !important;
-  display: flex;
-  flex-direction: column;
+.shaark-popup {
+  display: none;
+  position: fixed;
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  right: 16px;
+  left: 16px;
+  z-index: 300;
 }
-.shaark-screen-header {
+.shaark-popup.open { display: block; animation: popIn .2s cubic-bezier(.16,1,.3,1); }
+@keyframes popIn { from { opacity:0; transform:scale(.92) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.shaark-popup-inner {
   background: var(--navy);
-  padding: calc(var(--safe-top) + 16px) 20px 16px;
-  display: flex; align-items: center; gap: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  flex-shrink: 0;
-}
-.shaark-screen-msgs {
-  flex: 1; overflow-y: auto;
-  padding: 14px 16px;
-  display: flex; flex-direction: column; gap: 10px;
-  background: var(--navy);
-}
-.shaark-screen-msgs::-webkit-scrollbar { display: none; }
-.shaark-screen-input {
-  display: flex; gap: 10px;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid rgba(255,255,255,0.07);
-  background: var(--navy);
-  flex-shrink: 0;
-}
-.shaark-screen-input .scw-input {
-  flex: 1; padding: 12px 16px; font-size: 14px;
-}
-.shaark-screen-input .scw-send {
-  width: 46px; height: 46px; border-radius: 14px; font-size: 18px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  border: 1px solid rgba(42,157,181,0.25);
+  display: flex; flex-direction: column;
+  max-height: min(400px, calc(100dvh - 160px));
 }
 /* Shaark nav button special */
 .proto-nav-shaark {
@@ -681,12 +668,11 @@ html, body {
 /* ══ BOTTOM NAV ══ */
 .proto-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
-  height: calc(64px + env(safe-area-inset-bottom, 0px));
   background: white;
   border-top: 1px solid rgba(0,0,0,0.08);
-  display: flex; align-items: flex-start; justify-content: space-around;
-  padding: 10px 8px 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 10px 8px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
   z-index: 100;
   box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
 }
@@ -1076,29 +1062,7 @@ html, body {
       </div>
     </div>
 
-    <!-- ══ SHAARK SCREEN ══ -->
-    <div class="proto-screen shaark-screen" id="screen-shaark">
-      <div class="shaark-screen-header">
-        <div class="scw-avatar" style="width:40px;height:40px;font-size:20px;border-radius:14px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));display:flex;align-items:center;justify-content:center;flex-shrink:0">🦈</div>
-        <div>
-          <div style="font-size:16px;font-weight:700;color:white">Shaark</div>
-          <div style="font-size:11px;color:var(--teal);font-weight:500">● En línea</div>
-        </div>
-      </div>
-      <div class="shaark-screen-msgs" id="scw-msgs">
-        <div class="scw-bubble bot">¡Hola! 👋 Soy Shaark, tu asistente BROKR®. ¿En qué te ayudo?</div>
-      </div>
-      <div class="scw-chips" id="scw-chips" style="padding:0 16px 8px">
-        <div class="scw-chip" onclick="shaarkChip('Generar un contrato')">📄 Contrato</div>
-        <div class="scw-chip" onclick="shaarkChip('Calcular ISR')">💰 ISR</div>
-        <div class="scw-chip" onclick="shaarkChip('Crear ficha técnica')">🏷️ Ficha</div>
-        <div class="scw-chip" onclick="shaarkChip('Ver mis propiedades')">🏠 Inmuebles</div>
-      </div>
-      <div class="shaark-screen-input">
-        <input class="scw-input" id="scw-input" type="text" placeholder="Pregunta algo..." onkeydown="if(event.key==='Enter') shaarkFabSend()"/>
-        <button class="scw-send" onclick="shaarkFabSend()">➤</button>
-      </div>
-    </div>
+
 
     <!-- ══ MOD PANELS ══ -->
     <div id="panel-isr" class="mod-panel">
@@ -1327,6 +1291,33 @@ html, body {
   </div>
 </div>
 
+<!-- ══ SHAARK POPUP ══ -->
+<div class="shaark-popup" id="shaark-popup">
+  <div class="shaark-popup-inner">
+    <div class="scw-header">
+      <div class="scw-avatar">🦈</div>
+      <div>
+        <div class="scw-name">Shaark</div>
+        <div class="scw-status">● En línea</div>
+      </div>
+      <button class="scw-close" onclick="toggleShaarkPopup()">✕</button>
+    </div>
+    <div class="scw-messages" id="scw-msgs">
+      <div class="scw-bubble bot">¡Hola! 👋 Soy Shaark, tu asistente BROKR®. ¿En qué te ayudo?</div>
+    </div>
+    <div class="scw-chips" id="scw-chips">
+      <div class="scw-chip" onclick="shaarkChip('Generar un contrato')">📄 Contrato</div>
+      <div class="scw-chip" onclick="shaarkChip('Calcular ISR')">💰 ISR</div>
+      <div class="scw-chip" onclick="shaarkChip('Crear ficha técnica')">🏷️ Ficha</div>
+      <div class="scw-chip" onclick="shaarkChip('Ver mis propiedades')">🏠 Inmuebles</div>
+    </div>
+    <div class="scw-input-row">
+      <input class="scw-input" id="scw-input" type="text" placeholder="Pregunta algo..." onkeydown="if(event.key==='Enter') shaarkFabSend()"/>
+      <button class="scw-send" onclick="shaarkFabSend()">➤</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ BOTTOM NAV ══ -->
 <div class="proto-nav">
   <div class="proto-nav-item active" data-screen="profile" onclick="protoGoTo('profile')">
@@ -1337,7 +1328,7 @@ html, body {
     <div class="proto-nav-icon">⊟</div>
     <div class="proto-nav-label">Módulos</div>
   </div>
-  <div class="proto-nav-item" data-screen="shaark" onclick="protoGoTo('shaark')">
+  <div class="proto-nav-item" id="nav-shaark-btn" onclick="toggleShaarkPopup()">
     <div class="proto-nav-shaark">🦈</div>
     <div class="proto-nav-label">Shaark</div>
   </div>
@@ -1352,10 +1343,11 @@ function protoGoTo(name) {
   document.querySelectorAll('.proto-nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.mod-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('close-bar').style.display = 'none';
-  // Close notif panel if open
   notifOpen = false;
   const np = document.getElementById('notif-panel');
   if (np) np.style.display = 'none';
+  // Close shaark popup
+  closeShaarkWindow();
   protoScreen = name;
   const screen = document.getElementById('screen-' + name);
   if (screen) screen.classList.add('active-screen');
@@ -2348,9 +2340,40 @@ function handlePhotoUpload(event) {
   reader.readAsDataURL(file);
 }
 
-function saveProfileEdit() {
+async function saveProfileEdit() {
   const nombre = document.getElementById('pe-nombre')?.value?.trim() || '';
-  // Update display
+  const telefono = document.getElementById('pe-telefono')?.value?.trim() || '';
+  const empresa = document.getElementById('pe-empresa')?.value?.trim() || '';
+  const ciudad = document.getElementById('pe-ciudad')?.value?.trim() || '';
+  const cedula = document.getElementById('pe-cedula')?.value?.trim() || '';
+  const publico = document.getElementById('pe-publico')?.checked || false;
+
+  const btn = document.querySelector('.pe-save-btn');
+  if (btn) { btn.textContent = 'Guardando...'; btn.disabled = true; }
+
+  try {
+    // Save to Supabase if user is logged in
+    if (currentUser?.id) {
+      const token = localStorage.getItem('sb_token') || sessionStorage.getItem('sb_token');
+      const updates = { nombre, telefono, empresa, ciudad, cedula, perfil_publico: publico };
+      await fetch(SB_URL_AUTH + '/rest/v1/usuarios?id=eq.' + currentUser.id, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_KEY_AUTH,
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(updates)
+      });
+      // Update local profile
+      if (userProfile) Object.assign(userProfile, updates);
+    }
+  } catch(e) {
+    console.warn('No se pudo guardar en Supabase:', e);
+  }
+
+  // Always update DOM
   if (nombre) {
     const nameEl = document.getElementById('profile-name');
     const avatarEl = document.getElementById('profile-avatar-letter');
@@ -2360,6 +2383,8 @@ function saveProfileEdit() {
     if (homeAvatar) homeAvatar.textContent = nombre[0].toUpperCase();
     if (typeof updateGreeting === 'function') updateGreeting();
   }
+
+  if (btn) { btn.textContent = 'Guardar cambios'; btn.disabled = false; }
   closeProfileEdit();
 }
 
@@ -2392,9 +2417,33 @@ function updateUserDisplay() {
   }
 }
 
-// ══ SHAARK en nav — asegurar que scw-msgs no se duplique ══
-// La pantalla shaark usa los mismos IDs que el fab anterior
-// Redirigir shaarkFabSend a usar scw-msgs de la pantalla
+// ══ SHAARK POPUP ══
+let shaarkPopupOpen = false;
+function toggleShaarkPopup() {
+  shaarkPopupOpen = !shaarkPopupOpen;
+  const popup = document.getElementById('shaark-popup');
+  const navBtn = document.getElementById('nav-shaark-btn');
+  if (!popup) return;
+  if (shaarkPopupOpen) {
+    popup.classList.add('open');
+    navBtn?.classList.add('active');
+    setTimeout(() => {
+      const msgs = document.getElementById('scw-msgs');
+      if (msgs) msgs.scrollTop = msgs.scrollHeight;
+      document.getElementById('scw-input')?.focus();
+    }, 50);
+  } else {
+    popup.classList.remove('open');
+    navBtn?.classList.remove('active');
+  }
+}
+// Legacy compatibility
+function toggleShaarkWindow() { toggleShaarkPopup(); }
+function closeShaarkWindow() {
+  shaarkPopupOpen = false;
+  document.getElementById('shaark-popup')?.classList.remove('open');
+  document.getElementById('nav-shaark-btn')?.classList.remove('active');
+}
 
 </script>
 </body>
