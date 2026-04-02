@@ -133,14 +133,18 @@ html, body {
   color: var(--teal);
   font-weight: 600;
   letter-spacing: 0.8px;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .greeting-text .name {
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 600;
   color: white;
   line-height: 1.1;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+   text-transform: uppercase;
 }
 .home-avatar {
   width: 46px; height: 46px;
