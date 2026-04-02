@@ -1099,6 +1099,15 @@ html, body {
             <div class="pr-icon">🆘</div><span class="pr-text">Soporte</span><span class="pr-coming">Próximamente</span>
           </div>
         </div>
+        <!-- ADMIN SECTION — solo visible si plan === 'admin' -->
+        <div id="admin-lbl" style="display:none;padding:14px 20px 6px;font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px">Administración</div>
+        <div class="profile-section" id="admin-link-btn" style="display:none">
+          <div class="profile-row" onclick="window.location.href='admin.html'">
+            <div class="pr-icon" style="background:rgba(239,68,68,0.1);font-size:18px">🛡️</div>
+            <span class="pr-text" style="font-weight:700">Panel de administrador</span>
+            <span class="pr-arrow" style="color:var(--teal)">›</span>
+          </div>
+        </div>
         <div class="profile-section">
           <div class="profile-row" onclick="logout()">
             <div class="pr-icon">🚪</div><span class="pr-text" style="color:#e05252">Cerrar sesión</span>
