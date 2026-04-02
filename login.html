@@ -154,15 +154,13 @@ body{overflow-y:auto;}
   </video>
 </div>
 <script>
-  // Bloquear formulario durante splash
-  const splashInputs = document.querySelectorAll('input, button');
-  splashInputs.forEach(el => el.disabled = true);
+  // Ocultar el formulario mientras dura el splash
+  document.querySelector('.wrap').style.visibility = 'hidden';
 
   const splash = document.getElementById('splash');
   setTimeout(() => {
     splash.style.opacity = '0';
-    // Habilitar formulario cuando termina
-    splashInputs.forEach(el => el.disabled = false);
+    document.querySelector('.wrap').style.visibility = 'visible';
     setTimeout(() => splash.remove(), 700);
   }, 3000);
 </script>
@@ -282,8 +280,7 @@ async function doLogin(){
   const pass  = document.getElementById('l-pass').value;
   if(!email||!pass){ showMsg('Completa todos los campos'); return; }
 
-  const loginStart = Date.now();
-  setLoading('btn-login', true);
+setLoading('btn-login', true);
   const data = await sbAuth('token?grant_type=password', { email, password: pass });
   setLoading('btn-login', false);
 
@@ -291,16 +288,11 @@ async function doLogin(){
 
   // Guardar en ambos para máxima compatibilidad
   localStorage.setItem('sb_token', data.access_token);
+  localStorage.setItem('sb_refresh', data.refresh_token);
   localStorage.setItem('sb_user', JSON.stringify(data.user));
   sessionStorage.setItem('sb_token', data.access_token);
   sessionStorage.setItem('sb_user', JSON.stringify(data.user));
   localStorage.setItem('sesion_activa', 'true');
-
-  // Esperar a que el splash termine antes de redirigir (4200ms total)
-  const splashTotal = 4200;
-  const elapsed = Date.now() - loginStart;
-  const remaining = Math.max(0, splashTotal - elapsed);
-  await new Promise(r => setTimeout(r, remaining));
 
   await checkProfileAndRedirect(data.access_token, data.user);
 }
@@ -356,7 +348,25 @@ async function checkProfileAndRedirect(token, user){
 
 // Check if already logged in
 (async () => {
-  const token = localStorage.getItem('sb_token') || sessionStorage.getItem('sb_token');
+  let token = localStorage.getItem('sb_token') || sessionStorage.getItem('sb_token');
+  const refresh = localStorage.getItem('sb_refresh');
+  if(!token && refresh){
+    // Renovar sesión con refresh_token
+    const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY},
+      body: JSON.stringify({ refresh_token: refresh })
+    });
+    const d = await r.json();
+    if(d.access_token){
+      token = d.access_token;
+      localStorage.setItem('sb_token', d.access_token);
+      localStorage.setItem('sb_refresh', d.refresh_token);
+      localStorage.setItem('sb_user', JSON.stringify(d.user));
+      sessionStorage.setItem('sb_token', d.access_token);
+      sessionStorage.setItem('sb_user', JSON.stringify(d.user));
+    }
+  }
   if(token){
     const user = JSON.parse(localStorage.getItem('sb_user') || sessionStorage.getItem('sb_user') || '{}');
     if(user.id) await checkProfileAndRedirect(token, user);
