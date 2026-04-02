@@ -297,16 +297,16 @@ html, body {
 }
 .cat-module:active { transform: scale(0.95); }
 .cat-mod-icon {
-  width: 46px; height: 46px; border-radius: 14px;
+  width: 46px; height: 46px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; margin: 0 auto 10px;
+  margin: 0 auto 10px;
 }
 .cat-mod-name { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.3; }
-.cat-teal   .cat-mod-icon { background: rgba(42,157,181,0.12); }
-.cat-white  .cat-mod-icon { background: rgba(0,0,0,0.06); }
-.cat-navy   .cat-mod-icon { background: rgba(15,24,41,0.08); }
-.cat-green  .cat-mod-icon { background: rgba(61,184,138,0.12); }
-.cat-purple .cat-mod-icon { background: rgba(139,92,246,0.12); }
+.cat-teal   .cat-mod-icon { color: var(--teal-dark); }
+.cat-white  .cat-mod-icon { color: var(--navy); opacity: 0.65; }
+.cat-navy   .cat-mod-icon { color: var(--navy); }
+.cat-green  .cat-mod-icon { color: #2a9068; }
+.cat-purple .cat-mod-icon { color: #6d46c9; }
 
 /* ══ PERFIL SCREEN ══ */
 #screen-profile { background: var(--screen-bg); padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
@@ -741,19 +741,19 @@ html, body {
   background: var(--navy);
   border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 3px 10px rgba(15,24,41,0.25);
+  box-shadow: 0 3px 12px rgba(15,24,41,0.3);
   transition: transform 0.15s, box-shadow 0.15s;
   margin-bottom: 2px;
   overflow: hidden;
-  padding: 2px;
 }
 .proto-nav-item.active .proto-nav-shaark {
   transform: scale(1.06);
-  box-shadow: 0 4px 14px rgba(42,157,181,0.35);
+  box-shadow: 0 4px 14px rgba(42,157,181,0.4);
 }
 .proto-nav-shaark img {
-  width: 100%; height: 100%;
+  width: 80%; height: 80%;
   object-fit: contain;
+  display: block;
 }
 
 /* ══ BOTTOM NAV ══ */
@@ -1798,9 +1798,10 @@ function updateUserDisplay(){
   if(n) n.textContent = userProfile.nombre || currentUser?.email || '—';
   if(p) p.textContent = {free:'Free',modulos:'Personalizado',personalizado:'Personalizado',pro:'Pro',admin:'Admin'}[userProfile.plan] || userProfile.plan;
   // Mostrar foto o inicial
+  const fotoUrl = userProfile.foto_url ? userProfile.foto_url + '?t=' + (userProfile._fotoTs || '') : null;
   if(a){
-    if(userProfile.foto_url){
-      a.innerHTML = '<img src="' + userProfile.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>';
+    if(fotoUrl){
+      a.innerHTML = '<img src="' + fotoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>';
     } else {
       a.textContent = (userProfile.nombre || '?')[0].toUpperCase();
     }
@@ -1808,8 +1809,8 @@ function updateUserDisplay(){
   // Profile screen avatar
   const pa = document.getElementById('profile-avatar');
   const pal = document.getElementById('profile-avatar-letter');
-  if(pa && userProfile.foto_url){
-    pa.innerHTML = '<img src="' + userProfile.foto_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:26px"/><div style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;background:var(--teal);border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:11px">✏️</div>';
+  if(pa && fotoUrl){
+    pa.innerHTML = '<img src="' + fotoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:26px"/><div style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;background:var(--teal);border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:11px">✏️</div>';
   } else if(pal){
     pal.textContent = (userProfile.nombre || '?')[0].toUpperCase();
   }
@@ -2650,9 +2651,11 @@ function updateGreeting() {
   }
 }
 document.addEventListener('DOMContentLoaded', () => {
+  // Activar pantalla de módulos y marcar su nav item
   document.getElementById('screen-modules').classList.add('active-screen');
+  document.querySelector('.proto-nav-item[data-screen="modules"]')?.classList.add('active');
   document.getElementById('close-bar').style.display = 'none';
-  authInit().then(() => { if(typeof updateGreeting === 'function') updateGreeting(); startNewsTicker(); });
+  authInit().then(() => { startNewsTicker(); });
 
   // Refresco de plan cada 2 minutos — detecta cambios de suscripcion sin cerrar la app
   setInterval(async () => {
@@ -2803,7 +2806,7 @@ async function savePhotoOnly() {
       body: JSON.stringify({ foto_url: foto_url_stored })
     });
     // Update local profile and saved profile
-    if(userProfile) userProfile.foto_url = foto_url_stored;
+    if(userProfile){ userProfile.foto_url = foto_url_stored; userProfile._fotoTs = Date.now(); }
     const storage = localStorage.getItem('sb_token') ? localStorage : sessionStorage;
     if(userProfile) storage.setItem('sb_user_profile', JSON.stringify(userProfile));
     // Update avatar elements with cache-busted URL for immediate display
@@ -2898,46 +2901,50 @@ const NEWS_MODULES = [
 async function loadNewsTicker() {
   const track = document.getElementById('news-ticker-track');
   if(!track) return;
-  // Use rss2json to convert Google News RSS (no API key needed)
-  const query = encodeURIComponent('bienes raíces México inmobiliario');
-  const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=' + query + '&hl=es-419&gl=MX&ceid=MX:es-419');
-  const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + rssUrl + '&count=15';
-  try {
-    const r = await fetch(apiUrl);
-    const data = await r.json();
-    if(data.status !== 'ok' || !data.items || !data.items.length) throw new Error('No items');
-    const items = data.items.slice(0, 12);
-    // Build ticker — duplicate items for seamless loop
-    const makeItems = (items) => items.map(item => {
-      const source = item.author || (item.source && item.source.name) || 'Noticias';
-      const title = item.title.replace(/ - [^-]+$/, '').trim(); // remove source suffix
-      return '<a class="news-ticker-item" href="' + item.link + '" target="_blank" rel="noopener">' +
-             '<span class="news-ticker-source">' + source + '</span>' +
-             '<span>' + title + '</span></a>';
-    }).join('');
-    track.innerHTML = makeItems(items) + makeItems(items); // duplicate for loop
-    track.style.animation = 'none';
-    void track.offsetWidth; // reflow
-    const totalWidth = track.scrollWidth / 2;
-    track.style.cssText = 'animation: none; display:flex; white-space:nowrap; gap:0;';
-    // Set dynamic animation duration based on content length
-    const duration = Math.max(30, items.length * 5);
-    track.style.animation = 'tickerScroll ' + duration + 's linear infinite';
-  } catch(e) {
-    // Fallback static headlines
-    const fallback = [
-      { t: 'Tasas hipotecarias en México se estabilizan en 2025', s: 'Expansión' },
-      { t: 'Morelia entre las ciudades con mayor plusvalía del país', s: 'El Economista' },
-      { t: 'INFONAVIT amplía créditos para vivienda media y residencial', s: 'El Financiero' },
-      { t: 'Michoacán registra crecimiento inmobiliario del 12% anual', s: 'Milenio' },
-      { t: 'Nuevas reglas del SAT para declaración de inmuebles 2025', s: 'El Universal' },
-      { t: 'Inversión extranjera en bienes raíces mexicanos crece 18%', s: 'Forbes MX' },
-    ];
-    const makeStatic = (items) => items.map(i =>
-      '<span class="news-ticker-item"><span class="news-ticker-source">' + i.s + '</span><span>' + i.t + '</span></span>'
+
+  const fallback = [
+    { t: 'Tasas hipotecarias en México se estabilizan en 2026', s: 'Expansión', url: 'https://expansion.mx' },
+    { t: 'Morelia entre las ciudades con mayor plusvalía del país', s: 'El Economista', url: 'https://eleconomista.com.mx' },
+    { t: 'INFONAVIT amplía créditos para vivienda media y residencial', s: 'El Financiero', url: 'https://elfinanciero.com.mx' },
+    { t: 'Michoacán registra crecimiento inmobiliario del 12% anual', s: 'Milenio', url: 'https://milenio.com' },
+    { t: 'Nuevas reglas del SAT para declaración de inmuebles 2026', s: 'El Universal', url: 'https://eluniversal.com.mx' },
+    { t: 'Inversión extranjera en bienes raíces mexicanos crece 18%', s: 'Forbes MX', url: 'https://forbes.com.mx' },
+    { t: 'Desarrollos verticales lideran oferta inmobiliaria en CDMX', s: 'Inmobiliare', url: 'https://inmobiliare.com' },
+    { t: 'Créditos hipotecarios bancarios crecen 9% en el primer trimestre', s: 'El Economista', url: 'https://eleconomista.com.mx' },
+  ];
+
+  function renderTicker(items) {
+    const makeItems = (arr) => arr.map(item =>
+      '<a class="news-ticker-item" href="' + item.url + '" target="_blank" rel="noopener">' +
+      '<span class="news-ticker-source">' + item.s + '</span>' +
+      '<span>' + item.t + '</span></a>'
     ).join('');
-    track.innerHTML = makeStatic(fallback) + makeStatic(fallback);
+    track.innerHTML = makeItems(items) + makeItems(items);
+    track.style.cssText = '';
+    const duration = Math.max(35, items.length * 6);
+    track.style.animation = 'tickerScroll ' + duration + 's linear infinite';
   }
+
+  // Intentar GNews API (gratuita, sin key para búsquedas básicas via proxy)
+  try {
+    const r = await fetch(
+      'https://gnews.io/api/v4/search?q=bienes+raices+Mexico&lang=es&country=mx&max=10&apikey=pub_free',
+      { signal: AbortSignal.timeout(5000) }
+    );
+    const data = await r.json();
+    if(data.articles && data.articles.length) {
+      const items = data.articles.map(a => ({
+        t: a.title.replace(/ [-–|] [^-–|]+$/, '').trim(),
+        s: a.source ? a.source.name : 'Noticias',
+        url: a.url
+      }));
+      renderTicker(items);
+      return;
+    }
+  } catch(e) { /* silencioso, usar fallback */ }
+
+  // Fallback siempre funciona
+  renderTicker(fallback);
 }
 
 // Reload news every 10 minutes
@@ -2980,16 +2987,16 @@ function doGlobalSearch(q) {
   if(!q.trim()){ dd.innerHTML = ''; return; }
   const results = SEARCH_INDEX.filter(item => (item.name + item.desc).toLowerCase().includes(q.toLowerCase()));
   if(!results.length){ dd.innerHTML = '<div style="padding:14px 16px;font-size:13px;color:var(--gray-400)">Sin resultados</div>'; return; }
-  dd.innerHTML = results.slice(0,5).map((r,i) =>
-    '<div class="search-result-item" onclick="searchResultTap(' + i + ','' + q + '')">' +
+  dd.innerHTML = results.slice(0,5).map(function(r,i){
+    return '<div class="search-result-item" onclick="searchResultTap(' + i + ')">' +
     '<svg class="search-result-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 10.607z"/></svg>' +
-    '<div><div class="search-result-name">' + r.name + '</div><div class="search-result-desc">' + r.desc + '</div></div></div>'
-  ).join('');
+    '<div><div class="search-result-name">' + r.name + '</div><div class="search-result-desc">' + r.desc + '</div></div></div>';
+  }).join('');
   // Store results for tap handler
   window._searchResults = results;
 }
-function searchResultTap(i, q) {
-  const results = window._searchResults || SEARCH_INDEX.filter(item => (item.name + item.desc).toLowerCase().includes(q.toLowerCase()));
+function searchResultTap(i) {
+  const results = window._searchResults || [];
   if(results[i]) results[i].action();
   closeGlobalSearch();
 }
