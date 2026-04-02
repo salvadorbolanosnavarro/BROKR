@@ -319,18 +319,15 @@ async function doSignup(){
   const data = await sbAuth('signup', { email, password: pass });
   setLoading('btn-signup', false);
   if(data.error){ showMsg(data.error_description || data.error); return; }
-  if(data.id){
+if(data.id){
     // Auto-login after signup
-    localStorage.setItem('sb_token', data.access_token || '');
-    localStorage.setItem('sb_user', JSON.stringify(data.user || data));
     sessionStorage.setItem('sb_token', data.access_token || '');
     sessionStorage.setItem('sb_user', JSON.stringify(data.user || data));
-    showMsg('Cuenta creada. Completando tu perfil…', 'ok');
-    setTimeout(() => { window.location.href = 'registro.html'; }, 1000);
+    showMsg('✅ Cuenta creada. Te enviamos un correo de confirmación. Completando tu perfil…', 'ok');
+    setTimeout(() => { window.location.href = 'registro.html'; }, 2500);
   } else {
-    showMsg('Revisa tu correo para confirmar tu cuenta.', 'ok');
+    showMsg('✅ Casi listo. Te enviamos un correo de confirmación. Por favor revísalo para activar tu cuenta.', 'ok');
   }
-}
 
 function doGoogle(){
   window.location.href = `${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin+'/index.html')}`;
