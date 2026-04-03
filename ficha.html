@@ -598,8 +598,11 @@ async function generarFicha(){
   if(!id){ showError('Ingresa el ID de la propiedad.'); return; }
   setLoading(true,'Consultando EasyBroker...');
   try{
-    // Obtener API key del usuario desde localStorage o perfil
-    const ebKey = (window.parent?.userProfile?.eb_api_key) || localStorage.getItem('eb_api_key') || '';
+    // Obtener API key — el iframe lee desde el padre (mismo origen)
+    let ebKey = '';
+    try { ebKey = window.parent?.userProfile?.eb_api_key || ''; } catch(e){}
+    if (!ebKey) { try { ebKey = window.parent?.localStorage?.getItem('eb_api_key') || ''; } catch(e){} }
+    if (!ebKey) { try { ebKey = localStorage.getItem('eb_api_key') || ''; } catch(e){} }
     const fetchHeaders = ebKey ? { 'X-EB-Key': ebKey } : {};
     const res = await fetch(`${API}/propiedad/${encodeURIComponent(id)}`, { headers: fetchHeaders });
     if(!res.ok){
