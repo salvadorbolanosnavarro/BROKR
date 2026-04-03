@@ -1796,8 +1796,13 @@ function llenarISR(ac){
       // Tipo de inmueble
       if(ac.inmueble){
         const elTipo = document.getElementById('f-tipo');
-        if(elTipo) elTipo.value = ac.inmueble; // casa | terreno | comercial
+        if(elTipo) elTipo.value = ac.inmueble;
         if(typeof onTipoChange === 'function') onTipoChange();
+      }
+      // Exención casa habitación (solo aplica a casas)
+      if(ac.exencion){
+        const elExp = document.getElementById('f-exp');
+        if(elExp) elExp.value = ac.exencion; // no | si | nose
       }
       // Mejoras, escrituración, comisión
       if(ac.mejoras){
@@ -1814,6 +1819,10 @@ function llenarISR(ac){
       }
       // Calcular automáticamente
       if(typeof calcISR === 'function') calcISR();
+      // Descargar PDF automáticamente después de que el cálculo renderice
+      setTimeout(() => {
+        if(typeof descargarPDF === 'function' && _isrData) descargarPDF();
+      }, 800);
     } catch(e){ console.error('llenarISR error:', e); }
   }, 450);
 }

@@ -111,14 +111,18 @@ Datos OBLIGATORIOS (pregunta uno por uno):
 3. Mes y año de la venta
 4. Precio de compra original (MXN)
 5. Mes y año de la compra
-6. ¿Tiene mejoras o ampliaciones? (monto o "no")
-7. ¿Cuánto pagó de escrituración al comprar? (o "no sabe")
-8. ¿Cuánto es la comisión del agente en esta venta? (o "no aplica")
+6. Si es casa habitación: ¿usó esta exención de ISR en los últimos 3 años? (sí / no / no sabe)
+7. ¿Tiene mejoras o ampliaciones? (monto o "no")
+8. ¿Cuánto pagó de escrituración al comprar? (o "no sabe")
+9. ¿Cuánto es la comisión del agente en esta venta? (o "no aplica")
+
+IMPORTANTE: La pregunta 6 solo aplica si el inmueble es casa habitación o departamento. Para terrenos y comerciales, omítela y usa "no" automáticamente.
 
 Cuando tengas todo, ejecuta:
-[ACCION]{"tipo":"llenar_isr","precio_venta":NUMERO,"precio_compra":NUMERO,"anio_venta":NUMERO,"mes_venta":NUMERO,"anio_compra":NUMERO,"mes_compra":NUMERO,"inmueble":"casa","mejoras":NUMERO,"escrituracion":NUMERO,"comision":NUMERO}[/ACCION]
+[ACCION]{"tipo":"llenar_isr","precio_venta":NUMERO,"precio_compra":NUMERO,"anio_venta":NUMERO,"mes_venta":NUMERO,"anio_compra":NUMERO,"mes_compra":NUMERO,"inmueble":"casa","exencion":"no","mejoras":NUMERO,"escrituracion":NUMERO,"comision":NUMERO}[/ACCION]
 
 Valores válidos para "inmueble": "casa" | "terreno" | "comercial"
+Valores válidos para "exencion": "no" | "si" | "nose"
 Si el usuario no sabe un dato opcional (mejoras, escrituración, comisión), usa 0.
 mes_venta y mes_compra son números del 1 al 12.
 
@@ -151,8 +155,8 @@ Shaark: "¿Cuánto pagaste de escrituración al comprar?"
 Usuario: "no sé"
 Shaark: "¿Cuánto es tu comisión como agente?"
 Usuario: "96 mil"
-Shaark: "Perfecto. Venta $3,200,000 en marzo 2026, compra $1,000,000 en enero 2015, comisión $96,000. Calculando ahora."
-[ACCION]{"tipo":"llenar_isr","precio_venta":3200000,"precio_compra":1000000,"anio_venta":2026,"mes_venta":3,"anio_compra":2015,"mes_compra":1,"inmueble":"casa","mejoras":0,"escrituracion":0,"comision":96000}[/ACCION]
+Shaark: "Perfecto. Venta $3,200,000 en marzo 2026, compra $1,000,000 en enero 2015, comisión $96,000, sin exención previa. Calculando y generando tu PDF ahora."
+[ACCION]{"tipo":"llenar_isr","precio_venta":3200000,"precio_compra":1000000,"anio_venta":2026,"mes_venta":3,"anio_compra":2015,"mes_compra":1,"inmueble":"casa","exencion":"no","mejoras":0,"escrituracion":0,"comision":96000}[/ACCION]
 
 Responde siempre en español. Nunca uses markdown en respuestas conversacionales."""
 
