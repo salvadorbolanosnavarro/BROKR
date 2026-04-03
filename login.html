@@ -149,16 +149,33 @@ body{overflow-y:auto;}
   z-index:9999;
   transition:opacity 0.7s ease;
 ">
-  <video autoplay muted playsinline style="max-width:360px;width:80%;mix-blend-mode:screen;">
+  <video id="splash-video" muted playsinline style="max-width:360px;width:80%;mix-blend-mode:screen;">
     <source src="brokr-lanimation.mp4" type="video/mp4">
   </video>
 </div>
 <script>
- const splash = document.getElementById('splash');
-  setTimeout(() => {
+  const splash = document.getElementById('splash');
+  const splashVideo = document.getElementById('splash-video');
+
+  function hideSplash() {
     splash.style.opacity = '0';
-    setTimeout(() => splash.remove(), 700);
-  }, 3000);
+    setTimeout(() => { if(splash.parentNode) splash.remove(); }, 700);
+  }
+
+  // Forzar reproducción por JS para evitar que el navegador muestre el botón de play
+  const playPromise = splashVideo.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      // Si el navegador bloquea el autoplay, ocultar el splash de inmediato
+      splash.remove();
+    });
+  }
+
+  // Ocultar cuando el video termine
+  splashVideo.addEventListener('ended', hideSplash);
+
+  // Fallback: ocultar a los 4s por si acaso
+  setTimeout(hideSplash, 4000);
 </script>
 
 <div class="bg"></div>
