@@ -768,6 +768,8 @@ html, body {
   transition: transform 0.15s, box-shadow 0.15s;
   margin-bottom: 2px;
   overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
 }
 .proto-nav-item.active .proto-nav-shaark {
   transform: scale(1.06);
@@ -1626,13 +1628,20 @@ async function shaarkFabFetch(text) {
   try {
     const r = await fetch('https://brokrebapi-production.up.railway.app/chat-claude', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        max_tokens: 600,
-        messages: shaarkMsgs
-      })
+      body: JSON.stringify({ max_tokens: 600, messages: shaarkMsgs })
     });
     const data = await r.json();
-    const reply = data.choices?.[0]?.message?.content || 'Sin respuesta.';
+    if(!r.ok){
+      const t = document.getElementById('scw-typing');
+      if(t) t.textContent = '⚠️ ' + (data.detail || 'Error del servidor.');
+      return;
+    }
+    const reply = data.choices?.[0]?.message?.content;
+    if(!reply){
+      const t = document.getElementById('scw-typing');
+      if(t) t.textContent = '⚠️ Respuesta vacía. Intenta de nuevo.';
+      return;
+    }
     // Ejecutar acciones
     const accionRe = /\[ACCION\](.*?)\[\/ACCION\]/gs;
     let accionMatch;
@@ -1647,11 +1656,10 @@ async function shaarkFabFetch(text) {
     shaarkMsgs.push({role:'assistant', content:clean});
     const t = document.getElementById('scw-typing');
     if(t) t.textContent = clean;
-    // Hablar si la entrada fue por voz
     if(window._scwLastWasVoice){ speak(clean); window._scwLastWasVoice = false; }
   } catch(e) {
     const t = document.getElementById('scw-typing');
-    if(t) t.textContent = 'Error de conexión.';
+    if(t) t.textContent = '⚠️ Sin conexión. Revisa tu internet.';
   }
   if(msgs) msgs.scrollTop = msgs.scrollHeight;
 }
@@ -1724,27 +1732,32 @@ function stopScwVoice(){
 let _navPttTimer = null, _navPttActive = false;
 
 function navShaarkTouchStart(e){
+  e.preventDefault(); // evita selección de texto y menús desde el primer toque
   _navPttActive = false;
   _navPttTimer = setTimeout(() => {
     _navPttActive = true;
-    // Abrir popup si está cerrado
     if(!shaarkPopupOpen) toggleShaarkPopup();
-    setTimeout(() => startScwVoice(), 150);
-    // Feedback visual
+    setTimeout(() => startScwVoice(), 200);
     const btn = document.getElementById('nav-shaark-btn');
     if(btn) btn.style.opacity = '0.6';
-  }, 400); // 400ms = presión larga
+  }, 350);
 }
 
 function navShaarkTouchEnd(e){
+  e.preventDefault();
+  e.stopPropagation();
   clearTimeout(_navPttTimer);
   const btn = document.getElementById('nav-shaark-btn');
   if(btn) btn.style.opacity = '';
   if(_navPttActive){
-    e.preventDefault(); // evitar que dispare el onclick
-    e.stopPropagation();
-    stopScwVoice(); // detener y enviar
     _navPttActive = false;
+    // stop() suave: deja que onend procese la transcripción final
+    if(scwRecognition){
+      try{ scwRecognition.stop(); } catch(err){}
+    }
+  } else {
+    // Toque corto: abrir/cerrar popup
+    toggleShaarkPopup();
   }
 }
 
