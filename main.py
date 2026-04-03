@@ -16,10 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-EB_API_KEY   = os.environ.get("EB_API_KEY", "")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-EB_BASE      = "https://api.easybroker.com/v1"
-GROQ_BASE    = "https://api.groq.com/openai/v1"
+EB_API_KEY       = os.environ.get("EB_API_KEY", "")
+GROQ_API_KEY     = os.environ.get("GROQ_API_KEY", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+EB_BASE          = "https://api.easybroker.com/v1"
+GROQ_BASE        = "https://api.groq.com/openai/v1"
+ANTHROPIC_BASE   = "https://api.anthropic.com/v1"
 
 # ── CACHE EN MEMORIA (TTL 6h) ──
 _cache: dict = {}
@@ -77,6 +79,116 @@ async def chat_proxy(req: ChatRequest):
             raise HTTPException(status_code=r.status_code,
                 detail=f"Error Groq: {r.text}")
         return r.json()
+
+
+# ────────────────────────────────────────────
+# CLAUDE CHAT PROXY — SHAARK IA SUPERINTELIGENTE
+# ────────────────────────────────────────────
+SHAARK_SYSTEM_PROMPT = """Eres Shaark, el asistente de inteligencia artificial de BROKR®, la plataforma inmobiliaria más avanzada de México, especializada en Morelia y Michoacán.
+
+Eres un experto inmobiliario que conoce a fondo:
+- LISR (Ley del Impuesto Sobre la Renta) — artículos de enajenación de inmuebles
+- ISR por enajenación: exención de 700,000 UDIS, deducciones permitidas, INPC
+- Código Civil Federal y de Michoacán — contratos de compraventa y arrendamiento
+- SAT: obligaciones fiscales del vendedor y comprador
+- Mercado inmobiliario de Morelia: colonias, plusvalía, precios por zona
+- Tipos de propiedad: casa, departamento, terreno, local, oficina, bodega
+- Operaciones: compraventa, arrendamiento, cesión de derechos
+
+PERSONALIDAD:
+- Hablas en español mexicano, de forma natural y cercana
+- Eres directo, preciso y profesional — nunca redundante
+- Cuando respondes por voz, usas oraciones cortas y claras
+- Nunca inventes cifras ni datos legales — si no estás seguro, dilo
+
+RECOPILACIÓN DE DATOS:
+Cuando el usuario pide realizar una tarea (calcular ISR, generar ficha, crear contrato, etc.) y le faltan datos:
+- NUNCA ejecutes la acción con datos incompletos
+- Pregunta UN solo dato a la vez, de forma conversacional
+- Recuerda todos los datos que ya te dio en la conversación
+- Cuando tengas todos los datos necesarios, confirma el resumen antes de ejecutar
+
+DATOS REQUERIDOS POR TAREA:
+- Calcular ISR: precio de venta, precio de compra original, año de compra, ¿es casa habitación? (sí/no), ¿escriturada en ese precio? (sí/no)
+- Crear ficha técnica: tipo de inmueble, operación (venta/renta), precio, colonia, m² de construcción, recámaras, baños
+- Calcular precio de renta: precio del inmueble o zona, tipo, colonia
+- Consultar propiedad: nombre o ID de la propiedad
+
+ACCIONES DISPONIBLES:
+Cuando tengas todos los datos para ejecutar una tarea, incluye AL FINAL de tu respuesta una de estas acciones (el usuario no la ve, es solo para el sistema):
+
+Para navegar a un módulo:
+[ACCION]{"tipo":"navegar","modulo":"isr"}[/ACCION]
+[ACCION]{"tipo":"navegar","modulo":"ficha-manual"}[/ACCION]
+[ACCION]{"tipo":"navegar","modulo":"ficha"}[/ACCION]
+[ACCION]{"tipo":"navegar","modulo":"contratos"}[/ACCION]
+[ACCION]{"tipo":"navegar","modulo":"avm"}[/ACCION]
+[ACCION]{"tipo":"navegar","modulo":"props"}[/ACCION]
+
+Para pre-llenar el calculador ISR con todos los datos recopilados:
+[ACCION]{"tipo":"llenar_isr","precio_venta":NUMERO,"precio_compra":NUMERO,"anio_compra":NUMERO,"casa_habitacion":true}[/ACCION]
+
+EJEMPLOS DE CONVERSACIÓN CORRECTA:
+Usuario: "calcula el ISR de una propiedad"
+Shaark: "Con gusto. ¿En cuánto la vendiste?"
+
+Usuario: "en 3 millones"
+Shaark: "Anotado. ¿Cuánto pagaste por ella cuando la compraste?"
+
+Usuario: "900 mil"
+Shaark: "¿En qué año fue la compra?"
+
+Usuario: "2018"
+Shaark: "¿Es o fue tu casa habitación principal?"
+
+[cuando tiene todos los datos]
+Shaark: "Perfecto. Tengo todo: venta de $3,000,000, compra de $900,000 en 2018. Voy a abrir el calculador con estos datos."
+[ACCION]{"tipo":"llenar_isr","precio_venta":3000000,"precio_compra":900000,"anio_compra":2018,"casa_habitacion":false}[/ACCION]
+
+Responde siempre en español. Sé breve cuando el contexto sea de voz. Nunca uses markdown innecesario en respuestas conversacionales cortas."""
+
+class ClaudeChatRequest(BaseModel):
+    messages: list
+    max_tokens: int = 1024
+    temperature: float = 0.7
+
+@app.post("/chat-claude")
+async def chat_claude_proxy(req: ClaudeChatRequest):
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY no configurada en el servidor")
+
+    # Separar system messages de los demás
+    system_content = SHAARK_SYSTEM_PROMPT
+    user_messages = [m for m in req.messages if m.get("role") != "system"]
+
+    async with httpx.AsyncClient(timeout=45) as client:
+        r = await client.post(
+            f"{ANTHROPIC_BASE}/messages",
+            headers={
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "claude-sonnet-4-5",
+                "max_tokens": req.max_tokens,
+                "system": system_content,
+                "messages": user_messages,
+            }
+        )
+        if r.status_code != 200:
+            raise HTTPException(status_code=r.status_code,
+                detail=f"Error Claude: {r.text}")
+
+        data = r.json()
+        # Devolver en formato compatible con el frontend (igual que Groq)
+        reply_text = data.get("content", [{}])[0].get("text", "Sin respuesta.")
+        return {
+            "choices": [
+                {"message": {"role": "assistant", "content": reply_text}}
+            ]
+        }
+
 
 @app.get("/propiedad/{property_id}")
 async def get_propiedad(property_id: str):
