@@ -2095,7 +2095,7 @@ const PANEL_MAP = {
 };
 
 function setPanel(name) {
-  document.getElementById('screen-modules').classList.remove('active-screen');
+  document.getElementById('screen-modules').classList.add('active-screen');
   document.querySelectorAll('.mod-panel').forEach(p => p.classList.remove('active'));
   const pid = PANEL_MAP[name];
   if(pid){
