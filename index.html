@@ -406,7 +406,7 @@ html, body {
 }
 .isr-badge {
   font-size: 9px; font-weight: 700;
-  background: rgba(139,92,246,0.15); color: var(--violet2);
+  background: var(--teal-glow); color: var(--teal);
   padding: 3px 9px; border-radius: 20px;
   text-transform: uppercase; letter-spacing: .5px;
 }
@@ -417,7 +417,7 @@ html, body {
 }
 .isr-card-lbl {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .8px; color: var(--violet2);
+  letter-spacing: .8px; color: var(--teal);
   margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
 }
 .isr-opt { font-size: 9px; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--mut); font-style: italic; }
@@ -433,22 +433,22 @@ html, body {
   border-radius: var(--r3); color: var(--text);
   font-size: 13px; font-family: 'Poppins', sans-serif; outline: none; transition: border-color .2s;
 }
-.isr-f input:focus, .isr-f select:focus { border-color: var(--violet); background: #fff; }
+.isr-f input:focus, .isr-f select:focus { border-color: var(--teal); background: #fff; }
 .isr-f input::placeholder { color: var(--mut2); }
-.isr-hint { font-size: 10px; color: var(--violet2); margin-top: 2px; }
+.isr-hint { font-size: 10px; color: var(--teal); margin-top: 2px; }
 .isr-alert-warn { border-radius: var(--r3); padding: 9px 12px; font-size: 12px; line-height: 1.5; margin-top: 10px; background: rgba(245,158,11,.1); border-left: 3px solid var(--amber); color: var(--amber2); }
 .isr-alert-info { border-radius: var(--r3); padding: 9px 12px; font-size: 12px; line-height: 1.5; margin-top: 10px; background: rgba(59,130,246,.1); border-left: 3px solid #3b82f6; color: #93c5fd; }
 .isr-inpc-status { background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--r3); padding: 10px 14px; margin-bottom: 12px; font-size: 12px; }
-.isr-spin { width: 13px; height: 13px; border: 2px solid rgba(0,0,0,0.1); border-top-color: var(--violet); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+.isr-spin { width: 13px; height: 13px; border: 2px solid rgba(0,0,0,0.1); border-top-color: var(--teal); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .isr-calc-btn {
   width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--violet), #7c3aed);
+  background: var(--navy);
   border: none; border-radius: var(--r2); color: #fff;
   font-size: 14px; font-weight: 700; font-family: 'Poppins', sans-serif;
   cursor: pointer; display: flex; align-items: center;
   justify-content: center; gap: 8px; transition: opacity .2s, transform .15s;
-  box-shadow: 0 4px 20px rgba(139,92,246,.4);
+  box-shadow: 0 4px 20px rgba(15,24,41,.25);
 }
 .isr-calc-btn:hover { opacity: .9; transform: translateY(-1px); }
 .isr-calc-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -461,7 +461,7 @@ html, body {
   font-family: 'Poppins', sans-serif; cursor: pointer; transition: all .15s;
 }
 .res-back-btn:hover { color: var(--text); border-color: var(--text); }
-.res-tipo-lbl { font-size: 11px; font-weight: 700; background: rgba(139,92,246,.15); color: var(--violet2); padding: 4px 10px; border-radius: 20px; }
+.res-tipo-lbl { font-size: 11px; font-weight: 700; background: var(--teal-glow); color: var(--teal); padding: 4px 10px; border-radius: 20px; }
 #res-cards, .res-cards-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 10px; margin-bottom: 14px; }
 .rc { background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--r2); padding: 14px; }
 .rc.gn { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.25); }
@@ -472,7 +472,7 @@ html, body {
 .rc-n { font-size: 10px; color: var(--mut); line-height: 1.4; }
 .res-inpc-row { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--r2); padding: 12px 14px; margin-bottom: 12px; flex-wrap: wrap; }
 .res-inpc-cell { flex: 1; min-width: 80px; text-align: center; }
-.res-inpc-cell.hl .res-inpc-val { color: var(--violet2); }
+.res-inpc-cell.hl .res-inpc-val { color: var(--teal); }
 .res-inpc-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .6px; color: var(--mut); margin-bottom: 3px; }
 .res-inpc-val { font-size: 15px; font-weight: 700; color: var(--navy); }
 .res-inpc-arr { color: var(--mut); font-size: 16px; flex-shrink: 0; }
@@ -1586,7 +1586,7 @@ html, body {
           <div class="res-topbar">
             <button class="res-back-btn" onclick="resetISR()">← Nuevo cálculo</button>
             <div style="display:flex;align-items:center;gap:8px">
-              <button class="res-back-btn" onclick="descargarPDF()" style="border-color:var(--violet);color:var(--violet2)">
+              <button class="res-back-btn" onclick="descargarPDF()" style="border-color:var(--teal);color:var(--teal)">
                 <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 PDF
               </button>

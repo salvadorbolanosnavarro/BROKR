@@ -5,62 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Brokr — Ficha Técnica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
 <style>
 /* ─── VARIABLES ─────────────────────────────── */
 :root{
   --navy:#0f1829;
-  --navy2:#1a2744;
+  --navy2:#1e2d47;
   --teal:#2a9db5;
-  --gold:#c9a84c;
+  --teal-dark:#1a7a8f;
+  --teal-bg:rgba(42,157,181,0.10);
+  --teal-border:rgba(42,157,181,0.25);
   --white:#ffffff;
   --gray:#f5f6f8;
-  --gray2:#e8ecf2;
-  --txt:#1a2744;
-  --mut:#6b7a99;
-  --r:12px;
+  --gray2:#e8eaee;
+  --txt:#1a2035;
+  --mut:#5a6070;
+  --mut2:#9aa0ad;
+  --r:14px;
+  --shadow:0 2px 12px rgba(0,0,0,0.07);
+  --font:'Poppins',sans-serif;
 }
 
 /* ─── RESET ──────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:var(--txt)}
+body{font-family:'Poppins',sans-serif;background:#f0f2f7;color:var(--txt)}
 
 /* ─── APP UI ─────────────────────────────────── */
 #app-ui{
-  max-width:520px;margin:0 auto;padding:28px 20px 60px;
+  max-width:520px;margin:0 auto;padding:24px 20px 60px;
 }
-.ui-logo{margin-bottom:28px}
-.ui-logo img{height:28px}
-.ui-card{background:var(--white);border-radius:var(--r);padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:16px}
-.ui-card h2{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px}
-.ui-card p{font-size:13px;color:var(--mut);margin-bottom:18px;line-height:1.5}
+.ui-logo{margin-bottom:20px}
+.ui-logo img{height:26px}
+.ui-card{
+  background:var(--white);border-radius:var(--r);
+  padding:20px;box-shadow:var(--shadow);
+  border:1px solid rgba(0,0,0,0.06);margin-bottom:14px;
+}
+.ui-card h2{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.ui-card p{font-size:12px;color:var(--mut);margin-bottom:16px;line-height:1.5}
 .ui-input-row{display:flex;gap:10px}
 .ui-input{
   flex:1;padding:11px 14px;border:1.5px solid var(--gray2);border-radius:10px;
-  font-size:14px;font-family:'DM Sans',sans-serif;color:var(--txt);outline:none;
-  transition:border-color .15s;
+  font-size:14px;font-family:'Poppins',sans-serif;color:var(--txt);outline:none;
+  transition:border-color .15s;background:var(--gray);
 }
-.ui-input:focus{border-color:var(--teal)}
+.ui-input:focus{border-color:var(--teal);background:white;box-shadow:0 0 0 3px var(--teal-bg);}
 .ui-btn{
   display:flex;align-items:center;gap:7px;padding:11px 20px;
   background:var(--navy);color:var(--white);border:none;border-radius:10px;
-  font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;
-  transition:background .15s;white-space:nowrap;
+  font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;
+  transition:opacity .15s;white-space:nowrap;
 }
-.ui-btn:hover{background:var(--navy2)}
+.ui-btn:hover{opacity:.9}
 .ui-btn.teal{background:var(--teal)}
-.ui-btn.teal:hover{background:#1f8ba0}
+.ui-btn.teal:hover{opacity:.9}
 #print-bar{
   display:none;background:var(--white);border-radius:var(--r);
-  padding:16px 20px;box-shadow:0 2px 12px rgba(0,0,0,.06);
-  margin-bottom:16px;flex-direction:row;align-items:center;
+  padding:14px 16px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);
+  margin-bottom:14px;flex-direction:row;align-items:center;
   justify-content:space-between;gap:12px;
 }
 #print-bar.show{display:flex}
-#print-bar span{font-size:13px;color:var(--mut)}
+#print-bar span{font-size:12px;color:var(--mut);font-weight:500}
 .ui-error{
-  background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;
-  padding:12px 16px;font-size:13px;color:#dc2626;margin-top:12px;display:none;
+  background:rgba(224,54,74,0.07);border:1px solid rgba(224,54,74,0.25);border-radius:10px;
+  padding:10px 14px;font-size:12px;color:#e0364a;margin-top:10px;display:none;
 }
 .ui-loading{
   display:none;flex-direction:column;align-items:center;
@@ -68,12 +77,12 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:var(--txt)}
 }
 .ui-loading.show{display:flex}
 .spinner{
-  width:32px;height:32px;border:3px solid var(--gray2);
+  width:28px;height:28px;border:2.5px solid var(--gray2);
   border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.ui-loading p{font-size:13px;color:var(--mut)}
-#back-btn{display:none;margin-bottom:12px}
+.ui-loading p{font-size:12px;color:var(--mut);font-weight:500}
+#back-btn{display:none;margin-bottom:10px}
 #back-btn.show{display:flex}
 
 /* ─── FICHA (preview container) ─────────────── */
@@ -114,7 +123,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:var(--txt)}
 }
 .cover-badge{
   display:inline-block;
-  background:var(--gold);color:var(--white);
+  background:var(--teal);color:var(--white);
   font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
   padding:4px 10px;border-radius:20px;margin-bottom:10px;
 }
