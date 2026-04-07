@@ -1398,7 +1398,7 @@ async def buscar_comparables(req: ComparablesRequest):
         except httpx.TimeoutException:
             raise HTTPException(status_code=504, detail="Apify tardó demasiado. Intenta de nuevo.")
 
-        if r.status_code != 200:
+        if r.status_code not in (200, 201):
             raise HTTPException(
                 status_code=502,
                 detail=f"Error de Apify: {r.status_code} — {r.text[:300]}"
