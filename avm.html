@@ -213,12 +213,41 @@
       border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── AUTOCOMPLETE ── */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: white; border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 100; overflow: hidden;
+    }
+    .autocomplete-item {
+      padding: 11px 14px; font-size: 13px; color: var(--text);
+      cursor: pointer; border-bottom: 1px solid var(--gray-100);
+      transition: background 0.1s; font-family: 'Poppins', sans-serif;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:active { background: var(--teal-glow); }
+    .autocomplete-item .ac-main { font-weight: 600; }
+    .autocomplete-item .ac-sub { font-size: 11px; color: var(--gray-400); margin-top: 1px; }
+    .colonia-selected {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--teal-glow); border: 1px solid rgba(42,157,181,0.3);
+      border-radius: 10px; padding: 10px 12px;
+      font-size: 13px; font-weight: 600; color: var(--teal-dark);
+    }
+    .colonia-selected button {
+      margin-left: auto; background: none; border: none;
+      color: var(--gray-400); font-size: 16px; cursor: pointer; padding: 0;
+    }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useMemo, useCallback } = React;
+    const { useState, useMemo, useCallback, useRef, useEffect } = React;
 
     const API = "https://brokrebapi-production.up.railway.app";
 
@@ -328,14 +357,87 @@
       );
     }
 
+    function ColoniaInput({ value, onSelect, ciudad }) {
+      const [texto,      setTexto]      = useState(value ? value.nombre : "");
+      const [sugerencias,setSugerencias] = useState([]);
+      const [abierto,    setAbierto]    = useState(false);
+      const [buscando,   setBuscando]   = useState(false);
+      const timerRef = useRef(null);
+
+      useEffect(() => {
+        if (value) setTexto(value.nombre);
+      }, [value]);
+
+      const buscar = (txt) => {
+        setTexto(txt);
+        if (value) onSelect(null); // reset selection when typing
+        clearTimeout(timerRef.current);
+        if (txt.length < 3) { setSugerencias([]); setAbierto(false); return; }
+        timerRef.current = setTimeout(async () => {
+          setBuscando(true);
+          try {
+            const r = await fetch(`${API}/api/colonias?texto=${encodeURIComponent(txt)}&ciudad=${encodeURIComponent(ciudad || "Morelia")}`);
+            const d = await r.json();
+            setSugerencias(d.colonias || []);
+            setAbierto(true);
+          } catch {}
+          finally { setBuscando(false); }
+        }, 400);
+      };
+
+      const seleccionar = (col) => {
+        setTexto(col.nombre);
+        setSugerencias([]);
+        setAbierto(false);
+        onSelect(col);
+      };
+
+      if (value) {
+        return (
+          <div className="colonia-selected">
+            <span>📍 {value.nombre}</span>
+            <button onClick={() => { onSelect(null); setTexto(""); }}>✕</button>
+          </div>
+        );
+      }
+
+      return (
+        <div className="autocomplete-wrap">
+          <input
+            type="text" value={texto}
+            onChange={(e) => buscar(e.target.value)}
+            placeholder="Escribe la colonia..."
+            style={{ width: "100%", padding: "10px 12px", background: "var(--gray-100)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 10, color: "var(--text)", outline: "none", fontFamily: "'Poppins', sans-serif", fontSize: 14 }}
+          />
+          {buscando && <div style={{ fontSize: 11, color: "var(--gray-400)", marginTop: 4 }}>Buscando...</div>}
+          {abierto && sugerencias.length > 0 && (
+            <div className="autocomplete-dropdown">
+              {sugerencias.map((s, i) => (
+                <div key={i} className="autocomplete-item" onClick={() => seleccionar(s)}>
+                  <div className="ac-main">{s.nombre}</div>
+                  <div className="ac-sub">{s.display}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {abierto && sugerencias.length === 0 && !buscando && texto.length >= 3 && (
+            <div className="autocomplete-dropdown">
+              <div className="autocomplete-item" style={{ color: "var(--gray-400)" }}>Sin resultados — verifica el nombre</div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     function AVM() {
-      const [tab,       setTab]       = useState(0);
-      const [sujeto,    setSujeto]    = useState({ tipo: "casa", direccion: "", colonia: "", ciudad: "morelia", m2Terreno: "", m2Construccion: "", recamaras: "", banos: "", estacionamiento: "", nivel: "", unidades: "", edad: "", conservacion: "bueno", calidad: "medio" });
-      const [comps,     setComps]     = useState([]);
-      const [autoComps, setAutoComps] = useState([]);
-      const [autoSel,   setAutoSel]   = useState(new Set());
-      const [loading,   setLoading]   = useState(false);
-      const [error,     setError]     = useState("");
+      const [tab,        setTab]        = useState(0);
+      const [sujeto,     setSujeto]     = useState({ tipo: "casa", direccion: "", colonia: "", ciudad: "morelia", m2Terreno: "", m2Construccion: "", recamaras: "", banos: "", estacionamiento: "", nivel: "", unidades: "", edad: "", conservacion: "bueno", calidad: "medio" });
+      const [coloniaObj, setColoniaObj] = useState(null); // {nombre, latitud, longitud}
+      const [comps,      setComps]      = useState([]);
+      const [autoComps,  setAutoComps]  = useState([]);
+      const [autoSel,    setAutoSel]    = useState(new Set());
+      const [loading,    setLoading]    = useState(false);
+      const [error,      setError]      = useState("");
 
       const u      = (k, v) => setSujeto((p) => ({ ...p, [k]: v }));
       const campos = CAMPOS[sujeto.tipo] || CAMPOS.casa;
@@ -345,22 +447,28 @@
       const updateComp = (id, k, v) => setComps((p) => p.map((c) => c.id === id ? { ...c, [k]: v } : c));
 
       const buscarComparables = useCallback(async () => {
-        if (!sujeto.colonia.trim()) { setError("Escribe la colonia primero."); return; }
+        if (!coloniaObj) { setError("Selecciona una colonia del listado primero."); return; }
         setError(""); setLoading(true);
         try {
-          const res = await fetch(`${API}/api/comparables`, {
+          const res = await fetch(`${API}/api/comparables-cercanos`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ colonia: sujeto.colonia, ciudad: sujeto.ciudad || "morelia", tipo: sujeto.tipo, max_resultados: 15 }),
+            body: JSON.stringify({
+              latitud: coloniaObj.latitud,
+              longitud: coloniaObj.longitud,
+              tipo: sujeto.tipo,
+              radio_km: 2.0,
+              max_resultados: 15,
+            }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.detail || "Error");
           setAutoComps(data.comparables || []);
           setAutoSel(new Set());
-          if (!(data.comparables || []).length) setError("No encontramos propiedades en esa colonia. Prueba con otra o agrega comparables manualmente.");
+          if (!(data.comparables || []).length) setError("No encontramos propiedades cercanas. Prueba aumentando el radio o agrega comparables manualmente.");
         } catch { setError("No se pudo conectar. Intenta más tarde."); }
         finally { setLoading(false); }
-      }, [sujeto.colonia, sujeto.ciudad, sujeto.tipo]);
+      }, [coloniaObj, sujeto.tipo]);
 
       const toggleAutoComp = (i) => setAutoSel((p) => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; });
 
@@ -466,7 +574,19 @@
               <div className="avm-card">
                 <div className="card-label">📍 Ubicación</div>
                 <div className="field-row"><F label="Dirección"><input type="text" value={sujeto.direccion} onChange={(e) => u("direccion", e.target.value)} placeholder="Calle y número" /></F></div>
-                <div className="field-row"><F label="Colonia"><input type="text" value={sujeto.colonia} onChange={(e) => u("colonia", e.target.value)} placeholder="Chapultepec Sur" /></F></div>
+                <div className="field-row">
+                  <div className="field">
+                    <label>COLONIA *</label>
+                    <ColoniaInput
+                      value={coloniaObj}
+                      ciudad={sujeto.ciudad || "Morelia"}
+                      onSelect={(col) => {
+                        setColoniaObj(col);
+                        u("colonia", col ? col.nombre : "");
+                      }}
+                    />
+                  </div>
+                </div>
                 <div className="field-row"><F label="Ciudad"><input type="text" value={sujeto.ciudad} onChange={(e) => u("ciudad", e.target.value)} placeholder="Morelia" /></F></div>
               </div>
 
