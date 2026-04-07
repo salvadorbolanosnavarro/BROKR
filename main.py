@@ -1537,6 +1537,6 @@ async def buscar_colonias(texto: str, ciudad: str = "Morelia"):
                 "longitud": lon,
             })
 
-    resultado = {"colonias": colonias[:6]}
+    resultado = {"colonias": colonias[:6], "debug": data.get("predictions", [])}
     cache_set(cache_key, resultado, ttl=86400)
     return resultado
