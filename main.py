@@ -1015,17 +1015,13 @@ def build_ficha_html(p: dict, images_b64: dict) -> str:
 
     gallery_fotos = foto_urls[:]  # include hero photo as first in gallery
     gallery_pages = ""
+    total = len(gallery_fotos)
+    full_pages = total // 6
+    remainder  = total % 6
 
-    # GALLERY PAGES — always 6 per page, pad with empty placeholders (like old working version)
-    for i in range(0, len(gallery_fotos), 6):
-        batch = gallery_fotos[i:i+6]
-        while len(batch) < 6:
-            batch.append(None)
-        imgs = "".join(
-            '<img src="{}" alt="foto"/>'.format(images_b64.get(u, u)) if u
-            else '<div style="background:#eef2f7"></div>'
-            for u in batch
-        )
+    for i in range(full_pages):
+        batch = gallery_fotos[i*6:(i+1)*6]
+        imgs  = "".join('<img src="{}" alt="foto"/>'.format(images_b64.get(u,u)) for u in batch)
         gallery_pages += '<div class="ficha-page"><div class="section-header"><h2>Galería fotográfica</h2></div><div class="photo-grid-6">{}</div>{}</div>'.format(imgs, footer())
 
     rows = []
@@ -1050,25 +1046,36 @@ def build_ficha_html(p: dict, images_b64: dict) -> str:
         items = "".join('<div class="amen-item">{}</div>'.format(a.get("name") or a) for a in amenids)
         amen_html = '<div class="amen-section"><div class="amen-ttl">Amenidades</div><div class="amen-grid">{}</div></div>'.format(items)
 
-    # CARACTERÍSTICAS — always its own page
-    gallery_pages += (
-        '<div class="ficha-page">'
+    chars_section = (
         '<div class="section-header chars-hdr"><h2>Características del inmueble</h2></div>'
         '<div class="chars-body"><table class="char-table"><tbody>{}</tbody></table>{}</div>'
-        '{}</div>'
-    ).format(rows_html, amen_html, footer())
+    ).format(rows_html, amen_html)
+
+    if remainder > 0:
+        batch = gallery_fotos[full_pages*6:]
+        imgs  = "".join('<img src="{}" alt="foto"/>'.format(images_b64.get(u,u)) for u in batch)
+        rows_r = (remainder + 1) // 2
+        gallery_pages += (
+            '<div class="ficha-page">'
+            '<div class="section-header"><h2>Galería fotográfica</h2></div>'
+            '<div class="photo-grid-auto" style="grid-template-rows:repeat({},82mm);height:{}mm">{}</div>'
+            '<div class="chars-inline">{}</div>'
+            '{}</div>'
+        ).format(rows_r, rows_r*82, imgs, chars_section, footer())
+    else:
+        gallery_pages += '<div class="ficha-page">{}{}</div>'.format(chars_section, footer())
 
     CSS = """
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'font-family:'Poppins',sans-serif;background:white;color:#0f1829}
-.ficha-page{width:210mm;height:297mm;background:white;display:flex;flex-direction:column;overflow:hidden;page-break-after:always;page-break-inside:avoid}
+body{font-family:'Poppins',sans-serif;background:white;color:#0f1829}
+.ficha-page{width:210mm;height:297mm;background:white;display:flex;flex-direction:column;overflow:hidden;page-break-after:always}
 .ficha-page:last-child{page-break-after:avoid}
 .cover-accent{height:4px;background:linear-gradient(90deg,#2a9db5 0%,#4caf7d 100%);flex-shrink:0}
-.cover-hero{width:100%;height:110mm;object-fit:cover;display:block;flex-shrink:0}
-.cover-hero-placeholder{width:100%;height:110mm;background:linear-gradient(135deg,#0f1829,#1a2744);flex-shrink:0}
+.cover-hero{width:100%;height:120mm;object-fit:cover;display:block;flex-shrink:0}
+.cover-hero-placeholder{width:100%;height:120mm;background:linear-gradient(135deg,#0f1829,#1a2744);flex-shrink:0}
 .cover-info{padding:14px 24px 10px;border-bottom:1px solid #e8ecf2}
 .cover-badge{display:inline-block;background:linear-gradient(135deg,#2a9db5,#1f8ba0);color:white;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:7px}
 .cover-precio{font-family:'Poppins',sans-serif;font-size:30px;font-weight:700;color:#0f1829;line-height:1;margin-bottom:4px}
@@ -1087,9 +1094,10 @@ body{font-family:'font-family:'Poppins',sans-serif;background:white;color:#0f182
 .section-header h2{font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:#0f1829}
 .chars-hdr{border-left-color:#4caf7d}
 .photo-grid-6{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:82mm 82mm 82mm;gap:2px;padding:2px;height:246mm;flex-shrink:0;overflow:hidden}
-.photo-grid-auto{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;flex:1;min-height:0;overflow:hidden}
+.photo-grid-auto{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;flex-shrink:0;overflow:hidden}
 .photo-grid-6 img,.photo-grid-auto img{width:100%;height:100%;object-fit:cover;display:block}
-.chars-body{padding:10px 24px 8px;overflow:hidden;flex:1}
+.chars-inline{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.chars-body{padding:10px 24px 8px;overflow:hidden}
 .char-table{width:100%;border-collapse:collapse}
 .char-table tr{border-bottom:1px solid #eef2f7}
 .char-table tr:nth-child(even) td{background:#f7f9fb}
@@ -1130,6 +1138,10 @@ body{font-family:'font-family:'Poppins',sans-serif;background:white;color:#0f182
     ).format(CSS, hero_html, tipo_op, precio, titulo, SVG_PIN, ubicacion,
              specs_html, cover_desc_html, footer(), gallery_pages)
 
+
+# In-memory PDF store: token -> (bytes, filename)
+import uuid as _uuid
+_pdf_store: dict = {}
 
 # ────────────────────────────────────────────
 # NOTICIAS INMOBILIARIAS — RSS REAL
@@ -1196,6 +1208,7 @@ async def get_noticias():
 import uuid as _uuid
 _pdf_store: dict = {}
 
+
 @app.post("/ficha-pdf")
 async def generar_ficha_pdf(p: dict):
     """Generate PDF from property data dict using Playwright."""
@@ -1241,8 +1254,22 @@ async def generar_ficha_pdf(p: dict):
         await browser.close()
     
     from fastapi.responses import JSONResponse
-    id_prop = p.get("public_id") or p.get("id") or "ficha"
-    filename = f"Brokr_{id_prop}.pdf"
+    import re as _re2
+    id_prop   = p.get("public_id") or p.get("id") or ""
+    loc       = p.get("location") or {}
+    colonia   = (loc.get("name") or "").strip()
+    tipo_raw  = (p.get("property_type") or "Propiedad").strip()
+    # Sanitize: remove accents and special chars for filename
+    def _slug(s):
+        for a, b in [('á','a'),('é','e'),('í','i'),('ó','o'),('ú','u'),('ü','u'),('ñ','n'),
+                     ('Á','A'),('É','E'),('Í','I'),('Ó','O'),('Ú','U'),('Ñ','N')]:
+            s = s.replace(a, b)
+        return _re2.sub(r'[^A-Za-z0-9_]', '_', s).strip('_')
+    parts = ["Ficha_Brokr"]
+    if colonia:  parts.append(_slug(colonia))
+    if tipo_raw: parts.append(_slug(tipo_raw))
+    if id_prop:  parts.append(_slug(id_prop))
+    filename = "_".join(parts) + ".pdf"
     token = str(_uuid.uuid4()).replace("-","")[:16]
     _pdf_store[token] = (pdf_bytes, filename)
     # Clean old entries if too many
@@ -1259,13 +1286,16 @@ async def descargar_ficha_pdf(token: str):
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="PDF no encontrado o expirado")
     pdf_bytes, filename = _pdf_store[token]
-    # inline so Safari opens it with its native PDF viewer + share button
+    # Use attachment for direct download on all devices including PWA
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename={filename}"}
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": "application/pdf",
+            "Cache-Control": "no-store",
+        }
     )
-
 # ────────────────────────────────────────────
 # VARIABLE DE ENTORNO — agregar junto a las demás arriba en main.py
 # ────────────────────────────────────────────
