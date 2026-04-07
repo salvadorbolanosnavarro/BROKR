@@ -24,6 +24,8 @@ GROQ_BASE        = "https://api.groq.com/openai/v1"
 ANTHROPIC_BASE   = "https://api.anthropic.com/v1"
 APIFY_API_KEY = os.environ.get("APIFY_API_KEY", "")
 GOOGLE_PLACES_KEY = os.environ.get("GOOGLE_PLACES_KEY", "")
+SUPABASE_URL      = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY      = os.environ.get("SUPABASE_ANON_KEY", "")
 
 # ── CACHE EN MEMORIA (TTL 6h) ──
 _cache: dict = {}
@@ -1463,6 +1465,8 @@ class CercanosRequest(BaseModel):
     max_resultados: int = 15
 
 GOOGLE_PLACES_KEY = os.environ.get("GOOGLE_PLACES_KEY", "")
+SUPABASE_URL      = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY      = os.environ.get("SUPABASE_ANON_KEY", "")
 
 @app.get("/api/colonias")
 async def buscar_colonias(texto: str, ciudad: str = "Morelia"):
@@ -1535,4 +1539,115 @@ async def buscar_colonias(texto: str, ciudad: str = "Morelia"):
 
     resultado = {"colonias": colonias[:6]}
     cache_set(cache_key, resultado, ttl=86400)
+    return resultado
+
+
+# ────────────────────────────────────────────
+# AVM — COMPARABLES CERCANOS (PostGIS + Supabase)
+# ────────────────────────────────────────────
+
+class CercanosRequest(BaseModel):
+    latitud: float
+    longitud: float
+    tipo: str = "casa"
+    radio_km: float = 2.0
+    max_resultados: int = 15
+
+TIPO_MAP = {
+    "casa":         ["Casas", "Desarrollos horizontales", "Desarrollos Horizontal/Vertical"],
+    "departamento": ["Departamentos", "Desarrollos verticales"],
+    "terreno":      ["Terrenos"],
+    "local":        ["Locales comerciales", "Locales Comerciales"],
+    "oficina":      ["Oficinas"],
+    "bodega":       ["Bodegas"],
+    "edificio":     ["Edificios"],
+}
+
+@app.post("/api/comparables-cercanos")
+async def comparables_cercanos(req: CercanosRequest):
+    """Busca propiedades cercanas en Supabase usando PostGIS."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(status_code=500, detail="SUPABASE_URL o SUPABASE_ANON_KEY no configuradas")
+
+    cache_key = f"cercanos_{req.tipo}_{req.latitud:.4f}_{req.longitud:.4f}_{req.radio_km}"
+    cached = cache_get(cache_key)
+    if cached:
+        return cached
+
+    tipos_db = TIPO_MAP.get(req.tipo, ["Casas"])
+    radio_metros = int(req.radio_km * 1000)
+
+    # Llamar a función RPC en Supabase que ejecuta la query PostGIS
+    payload = {
+        "lat": req.latitud,
+        "lon": req.longitud,
+        "radio": radio_metros,
+        "tipos": tipos_db,
+        "limite": req.max_resultados,
+    }
+
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post(
+            f"{SUPABASE_URL}/rest/v1/rpc/buscar_cercanos",
+            headers=headers,
+            json=payload,
+        )
+
+    if r.status_code not in (200, 201):
+        # Fallback: buscar por ciudad sin PostGIS
+        async with httpx.AsyncClient(timeout=15) as client:
+            r2 = await client.get(
+                f"{SUPABASE_URL}/rest/v1/propiedades_avm",
+                headers=headers,
+                params={
+                    "ciudad": "eq.Morelia",
+                    "precio": "gt.0",
+                    "metros_construccion": "not.is.null",
+                    "select": "id,titulo,precio,tipo_propiedad,metros_construccion,metros_terreno,recamaras,estacionamientos,colonia,ciudad,url,latitud,longitud",
+                    "limit": req.max_resultados,
+                    "order": "precio.asc",
+                }
+            )
+        items = r2.json() if r2.status_code == 200 else []
+    else:
+        items = r.json() or []
+
+    comparables = []
+    for item in items:
+        precio = item.get("precio") or 0
+        m2c    = item.get("metros_construccion") or 0
+        if precio <= 0 or m2c <= 0:
+            continue
+        comparables.append({
+            "precio":           int(precio),
+            "m2Construccion":   float(m2c),
+            "m2Terreno":        float(item.get("metros_terreno") or 0),
+            "recamaras":        int(item.get("recamaras") or 0),
+            "estacionamiento":  int(item.get("estacionamientos") or 0),
+            "banos":            0,
+            "edad":             0,
+            "conservacion":     "bueno",
+            "calidad":          "medio",
+            "mismaZona":        "si",
+            "titulo":           item.get("titulo") or "",
+            "url":              item.get("url") or "",
+            "imagen":           "",
+            "colonia":          item.get("colonia") or "",
+            "distancia_metros": int(item.get("distancia_metros") or 0),
+        })
+
+    resultado = {
+        "total":       len(comparables),
+        "comparables": comparables,
+        "latitud":     req.latitud,
+        "longitud":    req.longitud,
+        "radio_km":    req.radio_km,
+    }
+    cache_set(cache_key, resultado, ttl=3600)
     return resultado
