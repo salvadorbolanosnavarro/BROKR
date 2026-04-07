@@ -1507,20 +1507,21 @@ async def buscar_colonias(texto: str, ciudad: str = "Morelia"):
         place_id = pred.get("place_id", "")
 
         lat, lon = 0.0, 0.0
-        if place_id:
+     if place_id:
             try:
-                r2 = await client.get(
-                    "https://maps.googleapis.com/maps/api/place/details/json",
-                    params={
-                        "place_id": place_id,
-                        "fields": "geometry,name",
-                        "key": GOOGLE_PLACES_KEY,
-                    }
-                )
-                details_data = r2.json()
-                loc = details_data.get("result", {}).get("geometry", {}).get("location", {})
-                lat = loc.get("lat", 0.0)
-                lon = loc.get("lng", 0.0)
+                async with httpx.AsyncClient(timeout=10) as client2:
+                    r2 = await client2.get(
+                        "https://maps.googleapis.com/maps/api/place/details/json",
+                        params={
+                            "place_id": place_id,
+                            "fields": "geometry",
+                            "key": GOOGLE_PLACES_KEY,
+                        }
+                    )
+                    details_data = r2.json()
+                    loc = details_data.get("result", {}).get("geometry", {}).get("location", {})
+                    lat = loc.get("lat", 0.0)
+                    lon = loc.get("lng", 0.0)
             except Exception:
                 pass
 
