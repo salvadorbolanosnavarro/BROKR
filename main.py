@@ -1479,57 +1479,57 @@ async def buscar_colonias(texto: str, ciudad: str = "Morelia"):
     if not GOOGLE_PLACES_KEY:
         return {"colonias": [], "error": "GOOGLE_PLACES_KEY no configurada"}
 
-    async with httpx.AsyncClient(timeout=10) as client:
+    async with httpx.AsyncClient(timeout=15) as client:
         try:
             r = await client.get(
                 "https://maps.googleapis.com/maps/api/place/autocomplete/json",
                 params={
-                    "input": f"{texto}, {ciudad}, Michoacán, México",
-                    "types": "sublocality|neighborhood",
-                    "components": "country:mx",
+                    "input": f"colonia {texto} Morelia Michoacan",
+                    "types": "(regions)",
                     "language": "es",
                     "key": GOOGLE_PLACES_KEY,
                 }
             )
             data = r.json()
-        except Exception:
-            return {"colonias": []}
-
-    if data.get("status") not in ("OK", "ZERO_RESULTS"):
-        return {"colonias": [], "error": data.get("status")}
+        except Exception as e:
+            return {"colonias": [], "error": str(e)}
 
     colonias = []
     for pred in data.get("predictions", []):
         descripcion = pred.get("description", "")
-        # Solo incluir si menciona la ciudad
-        if ciudad.lower() not in descripcion.lower():
+
+        # Filtrar solo resultados que contengan Morelia o Michoacán
+        if "morelia" not in descripcion.lower() and "michoacán" not in descripcion.lower() and "michoacan" not in descripcion.lower():
             continue
+
         nombre = descripcion.split(",")[0].strip()
         place_id = pred.get("place_id", "")
 
-        # Obtener coordenadas via Place Details
-        try:
-            r2 = await client.get(
-                "https://maps.googleapis.com/maps/api/place/details/json",
-                params={
-                    "place_id": place_id,
-                    "fields": "geometry",
-                    "key": GOOGLE_PLACES_KEY,
-                }
-            )
-            details = r2.json()
-            loc = details.get("result", {}).get("geometry", {}).get("location", {})
-            lat = loc.get("lat", 0)
-            lon = loc.get("lng", 0)
-        except Exception:
-            lat, lon = 0, 0
+        lat, lon = 0.0, 0.0
+        if place_id:
+            try:
+                r2 = await client.get(
+                    "https://maps.googleapis.com/maps/api/place/details/json",
+                    params={
+                        "place_id": place_id,
+                        "fields": "geometry,name",
+                        "key": GOOGLE_PLACES_KEY,
+                    }
+                )
+                details = r2.json()
+                loc = details.get("result", {}).get("geometry", {}).get("location", {})
+                lat = loc.get("lat", 0.0)
+                lon = loc.get("lng", 0.0)
+            except Exception:
+                pass
 
-        colonias.append({
-            "nombre":   nombre,
-            "display":  descripcion,
-            "latitud":  lat,
-            "longitud": lon,
-        })
+        if nombre:
+            colonias.append({
+                "nombre":   nombre,
+                "display":  descripcion,
+                "latitud":  lat,
+                "longitud": lon,
+            })
 
     resultado = {"colonias": colonias[:6]}
     cache_set(cache_key, resultado, ttl=86400)
