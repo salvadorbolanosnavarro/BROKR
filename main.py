@@ -23,6 +23,7 @@ EB_BASE          = "https://api.easybroker.com/v1"
 GROQ_BASE        = "https://api.groq.com/openai/v1"
 ANTHROPIC_BASE   = "https://api.anthropic.com/v1"
 APIFY_API_KEY = os.environ.get("APIFY_API_KEY", "")
+GOOGLE_PLACES_KEY = os.environ.get("GOOGLE_PLACES_KEY", "")
 
 # ── CACHE EN MEMORIA (TTL 6h) ──
 _cache: dict = {}
