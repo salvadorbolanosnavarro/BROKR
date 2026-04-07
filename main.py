@@ -1056,12 +1056,12 @@ def build_ficha_html(p: dict, images_b64: dict) -> str:
         gallery_pages += (
             '<div class="ficha-page">'
             '<div class="section-header"><h2>Galería fotográfica</h2></div>'
-            '<div class="photo-grid-auto" style="grid-template-rows:repeat({},82mm);height:{}mm">{}</div>'
-            '<div class="chars-inline">{}</div>'
+            '<div class="photo-grid-auto" style="grid-template-rows:repeat({},1fr)">{}</div>'
             '{}</div>'
-        ).format(rows_r, rows_r*82, imgs, chars_section, footer())
-    else:
-        gallery_pages += '<div class="ficha-page">{}{}</div>'.format(chars_section, footer())
+        ).format(rows_r, imgs, footer())
+
+    # Characteristics ALWAYS on its own page
+    gallery_pages += '<div class="ficha-page">{}{}</div>'.format(chars_section, footer())
 
     CSS = """
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1092,10 +1092,9 @@ body{font-family:'font-family:'Poppins',sans-serif;background:white;color:#0f182
 .section-header h2{font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:#0f1829}
 .chars-hdr{border-left-color:#4caf7d}
 .photo-grid-6{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:82mm 82mm 82mm;gap:2px;padding:2px;height:246mm;flex-shrink:0;overflow:hidden}
-.photo-grid-auto{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;flex-shrink:0;overflow:hidden}
+.photo-grid-auto{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;flex:1;min-height:0;overflow:hidden}
 .photo-grid-6 img,.photo-grid-auto img{width:100%;height:100%;object-fit:cover;display:block}
-.chars-inline{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
-.chars-body{padding:10px 24px 8px;overflow:hidden}
+.chars-body{padding:10px 24px 8px;overflow:hidden;flex:1}
 .char-table{width:100%;border-collapse:collapse}
 .char-table tr{border-bottom:1px solid #eef2f7}
 .char-table tr:nth-child(even) td{background:#f7f9fb}
