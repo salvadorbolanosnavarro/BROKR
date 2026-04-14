@@ -494,6 +494,51 @@ function initDragDrop(){
 }
 document.addEventListener('DOMContentLoaded', initDragDrop);
 
+// ── Preload images from Editor de imágenes ────────────────────────────────────
+window.addEventListener('message', function(e) {
+  if (!e.data || e.data.type !== 'brokr-preload-images') return;
+  const images = e.data.images;
+  if (!images || !images.length) return;
+  showPreloadedImages(images);
+});
+
+function showPreloadedImages(images) {
+  // Add images to the fotos array
+  images.forEach(img => {
+    fotos.push({ url: img.url, name: img.name });
+  });
+  renderThumbsWithSelection();
+
+  // Show banner
+  let banner = document.getElementById('preload-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'preload-banner';
+    banner.style.cssText = 'background:rgba(42,157,181,.10);border:1.5px solid rgba(42,157,181,.3);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:inherit';
+    banner.innerHTML = `
+      <span style="font-size:13px;font-weight:600;color:#1a7a8f">
+        ${images.length} foto${images.length !== 1 ? 's' : ''} cargada${images.length !== 1 ? 's' : ''} desde el Editor de imágenes
+      </span>
+      <button onclick="dismissPreloadBanner()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#5a6070;line-height:1;padding:0 4px">×</button>
+    `;
+    const photosCard = document.querySelector('.ui-card');
+    if (photosCard) photosCard.prepend(banner);
+  }
+
+  // Scroll to top so user sees the photos
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function dismissPreloadBanner() {
+  const b = document.getElementById('preload-banner');
+  if (b) b.remove();
+}
+
+// Enhanced renderThumbs — when coming from Editor, show checkmark-style selection
+function renderThumbsWithSelection() {
+  renderThumbs(); // use existing function — photos appear ready to reorder/delete
+}
+
 
 function deletePhoto(i){
   fotos.splice(i,1);
