@@ -178,15 +178,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
     <!-- ══ SECCIÓN 1: FECHAS/PLAZO ══ -->
     <div class="card">
       <div class="card-title">Fechas/Plazo</div>
-       <input type="date" id="a-inicio" onchange="onFechaInicioChange()"/>
-
-      </div>
-      <div class="f-note" id="a-fecha-preview" style="color:var(--teal2);font-weight:600"></div>
-
-      <div class="frow" style="margin-top:14px">
+      <div class="frow">
         <div class="f">
           <label>Fecha de inicio del contrato</label>
-          <input type="date" id="a-fecha" onchange="()"/>
+          <input type="date" id="a-inicio" onchange="onFechaInicioChange()"/>
+          <div class="f-note" id="a-fecha-preview" style="color:var(--teal2);font-weight:600"></div>
         </div>
         <div class="f">
           <label>Fecha de término del contrato</label>
@@ -484,8 +480,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
       <div class="card-title">Fecha</div>
       <div class="frow one">
         <div class="f">
-          <label>Fecha del contrato (escrita)</label>
-          <input type="text" id="p-fecha" placeholder="Ej. 18 de enero de 2026"/>
+          <label>Fecha del contrato</label>
+          <input type="date" id="p-fecha"/>
         </div>
       </div>
     </div>
@@ -550,6 +546,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
       </div>
       <div class="frow one">
         <div class="f">
+          <label>Sexo</label>
+          <div class="sexo-toggle" id="sexo-vend">
+            <button class="sexo-btn active" data-sexo="M" onclick="setSexo('vend','M',this)">♂ Masculino</button>
+            <button class="sexo-btn" data-sexo="F" onclick="setSexo('vend','F',this)">♀ Femenino</button>
+          </div>
+        </div>
+      </div>
+      <div class="frow one">
+        <div class="f">
           <label>Domicilio para notificaciones</label>
           <input type="text" id="p-dom-vend" placeholder="Calle, número, colonia, C.P."/>
         </div>
@@ -562,6 +567,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
         <div class="f">
           <label>Nombre completo</label>
           <input type="text" id="p-comprador" placeholder="Nombre como aparece en su INE"/>
+        </div>
+      </div>
+      <div class="frow one">
+        <div class="f">
+          <label>Sexo</label>
+          <div class="sexo-toggle" id="sexo-comp">
+            <button class="sexo-btn active" data-sexo="M" onclick="setSexo('comp','M',this)">♂ Masculino</button>
+            <button class="sexo-btn" data-sexo="F" onclick="setSexo('comp','F',this)">♀ Femenino</button>
+          </div>
         </div>
       </div>
       <div class="frow one">
@@ -579,23 +593,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
           <label>Precio total de venta (MXN)</label>
           <div class="money-wrap">
             <span class="money-prefix">$</span>
-            <input type="text" id="p-precio" placeholder="1,250,000" oninput="fmtMoney(this)" onblur="fmtMoneyBlur(this)"/>
+            <input type="text" id="p-precio" placeholder="1,250,000" oninput="fmtMoney(this);calcularSaldo()" onblur="fmtMoneyBlur(this);calcularSaldo()"/>
           </div>
         </div>
         <div class="f">
           <label>Monto de arras / enganche (MXN)</label>
           <div class="money-wrap">
             <span class="money-prefix">$</span>
-            <input type="text" id="p-arras" placeholder="50,000" oninput="fmtMoney(this)" onblur="fmtMoneyBlur(this)"/>
+            <input type="text" id="p-arras" placeholder="50,000" oninput="fmtMoney(this);calcularSaldo()" onblur="fmtMoneyBlur(this);calcularSaldo()"/>
           </div>
         </div>
       </div>
       <div class="frow">
         <div class="f">
-          <label>Saldo restante (MXN)</label>
+          <label>Saldo restante (MXN) <span class="auto-badge">se calcula automático</span></label>
           <div class="money-wrap">
             <span class="money-prefix">$</span>
-            <input type="text" id="p-saldo" placeholder="1,200,000" oninput="fmtMoney(this)" onblur="fmtMoneyBlur(this)"/>
+            <input type="text" id="p-saldo" placeholder="1,200,000" readonly style="background:var(--navy3);color:var(--teal2)"/>
           </div>
         </div>
         <div class="f">
@@ -620,7 +634,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
         </div>
         <div class="f">
           <label>Fecha límite para escritura</label>
-          <input type="text" id="p-fecha-limite" placeholder="Ej. 30 de enero de 2026"/>
+          <input type="date" id="p-fecha-limite"/>
         </div>
       </div>
     </div>
@@ -633,7 +647,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#3b6fd4" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
       Cláusulas especiales (opcional)
     </h3>
-    <p>Describe en tus propias palabras lo que quieres incluir. La IA lo redactará en lenguaje legal mexicano y lo insertará automáticamente en el contrato.</p>
+    <p>Describe en tus propias palabras lo que quieres incluir. Nuestra IA lo redactará en lenguaje legal mexicano y lo insertará automáticamente en el contrato.</p>
     <div id="clausulas-list"></div>
     <button class="btn-add-clausula" onclick="addClausula()">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -722,8 +736,8 @@ function validateArrendamiento(){
   for(const [id, label] of required){
     if(!gv(id)){ return `El campo "${label}" es requerido.`; }
   }
-  if(!gv('a-fecha'))
-    return 'Ingresa la fecha de firma del contrato.';
+  if(!gv('a-inicio'))
+    return 'Ingresa la fecha de inicio del contrato.';
   if(!gv('a-inicio') || !gv('a-fin'))
     return 'Ingresa las fechas de inicio y término del contrato.';
   if(new Date(gv('a-fin')) <= new Date(gv('a-inicio')))
@@ -782,7 +796,7 @@ async function generarContrato(){
     const destino = gv('a-destino') === 'otro' ? gv('a-destino-otro') : gv('a-destino');
     datos = {
       // Fechas
-      fecha_contrato:     gv('a-fecha'),
+      fecha_contrato:     gv('a-inicio'),
       fecha_inicio:       gv('a-inicio'),
       fecha_fin:          gv('a-fin'),
       duracion:           gv('a-duracion'),
@@ -856,6 +870,8 @@ async function generarContrato(){
       registro:           gv('p-registro'),
       domicilio_vendedor: gv('p-dom-vend'),
       domicilio_comprador: gv('p-dom-comp'),
+      sexo_vendedor:      document.querySelector('#sexo-vend .sexo-btn.active')?.dataset?.sexo || 'M',
+      sexo_comprador:     document.querySelector('#sexo-comp .sexo-btn.active')?.dataset?.sexo || 'M',
       precio_total:       getMonto('p-precio'),
       monto_arras:        getMonto('p-arras'),
       monto_saldo:        getMonto('p-saldo') || (getMonto('p-precio') - getMonto('p-arras')),
@@ -969,6 +985,82 @@ function onFormaPagoChange(){
     banco.disabled = false;
     banco.style.opacity = '';
     banco.placeholder = 'Ej. BBVA 0123456789';
+  }
+}
+
+// ══ FUNCIONES AUXILIARES ══
+
+function setSexo(groupId, sexo, btn){
+  const container = document.getElementById('sexo-' + groupId);
+  if(!container) return;
+  container.querySelectorAll('.sexo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function fechaEscrita(iso){
+  if(!iso) return '';
+  const MESES = ['enero','febrero','marzo','abril','mayo','junio',
+                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  if(iso.includes(' de ')) return iso;
+  try{
+    const [y,m,d] = iso.split('-').map(Number);
+    return `${d} de ${MESES[m-1]} de ${y}`;
+  }catch(e){ return iso; }
+}
+
+function calcularPlazo(inicio, fin){
+  if(!inicio || !fin) return '';
+  const d1 = new Date(inicio), d2 = new Date(fin);
+  if(isNaN(d1)||isNaN(d2)) return '';
+  let meses = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+  if(meses <= 0) return '';
+  const NUMS = ['','UN','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE','DIEZ',
+                'ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO',
+                'DIECINUEVE','VEINTE','VEINTIUNO','VEINTIDÓS','VEINTITRÉS','VEINTICUATRO'];
+  if(meses % 12 === 0){
+    const años = meses / 12;
+    const s = años === 1 ? 'AÑO' : 'AÑOS';
+    return `${NUMS[años] || años} ${s}`;
+  }
+  return `${NUMS[meses] || meses} ${meses === 1 ? 'MES' : 'MESES'}`;
+}
+
+function onFechaInicioChange(){
+  const inicio = document.getElementById('a-inicio')?.value;
+  const preview = document.getElementById('a-fecha-preview');
+  if(preview) preview.textContent = inicio ? fechaEscrita(inicio) : '';
+  // Recalculate duration if end date exists
+  const fin = document.getElementById('a-fin')?.value;
+  if(fin){
+    const dur = document.getElementById('a-duracion');
+    if(dur && !dur.dataset.manual) dur.value = calcularPlazo(inicio, fin);
+  }
+  validarFechas();
+}
+
+function validarFechas(){
+  const inicio = document.getElementById('a-inicio')?.value;
+  const fin = document.getElementById('a-fin')?.value;
+  const errEl = document.getElementById('err-fechas');
+  if(!inicio || !fin || !errEl) return;
+  const d1 = new Date(inicio), d2 = new Date(fin);
+  if(d2 <= d1){
+    errEl.style.display = 'block';
+  } else {
+    errEl.style.display = 'none';
+    const dur = document.getElementById('a-duracion');
+    if(dur && !dur.dataset.manual) dur.value = calcularPlazo(inicio, fin);
+  }
+}
+
+function calcularSaldo(){
+  const precio = getMonto('p-precio');
+  const arras  = getMonto('p-arras');
+  const saldo  = document.getElementById('p-saldo');
+  if(!saldo) return;
+  if(precio > 0 && arras >= 0){
+    const diff = precio - arras;
+    saldo.value = diff > 0 ? diff.toLocaleString('en-US') : '0';
   }
 }
 

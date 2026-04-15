@@ -221,27 +221,26 @@ def generar_arrendamiento(datos, output_path):
     nombre_os   = u('nombre_obligado_solidario')
     destino     = u('destino_uso')
     plazo       = u('plazo_contrato')
-    MESES_PY = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
-                'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE']
+    MESES_PY = ['enero','febrero','marzo','abril','mayo','junio',
+                'julio','agosto','septiembre','octubre','noviembre','diciembre']
 
     def _fecha_escrita(v):
-        """Convert ISO date or already-written date to 'DD DE MES DE YYYY'."""
+        """Convert ISO date or already-written date to 'DD de mes de YYYY'."""
         if not v: return ''
         v = v.strip()
-        # Already written format e.g. '16 DE ENERO DE 2026'
-        if 'DE' in v.upper(): return v.upper()
+        # Already written format e.g. '16 de enero de 2026'
+        if ' de ' in v.lower(): return v.lower()
         # ISO format YYYY-MM-DD
         try:
             parts = v.split('-')
             if len(parts) == 3:
                 y,m,d_n = int(parts[0]),int(parts[1]),int(parts[2])
-                return f"{d_n} DE {MESES_PY[m-1]} DE {y}"
+                return f"{d_n} de {MESES_PY[m-1]} de {y}"
         except: pass
-        return v.upper()
+        return v
 
     fecha_firma_raw = d('fecha_contrato')
-    # fecha_contrato is built as "DD DE MES DE YYYY" in JS - use as-is
-    fecha_firma = fecha_firma_raw.upper() if fecha_firma_raw else ''
+    fecha_firma = _fecha_escrita(fecha_firma_raw)
     fecha_ini   = _fecha_escrita(d('fecha_inicio'))
     fecha_fin_s = _fecha_escrita(d('fecha_fin'))
     mpio_inm    = u('municipio_estado_inmueble')
@@ -289,7 +288,7 @@ def generar_arrendamiento(datos, output_path):
             fin_dt = _dt.strptime(fin_iso.split('T')[0], '%Y-%m-%d')
         if fin_dt:
             sig_dia = fin_dt + _td(days=1)
-            fecha_inpc = f"{sig_dia.day} DE {MESES_PY[sig_dia.month-1]} DE {sig_dia.year}"
+            fecha_inpc = f"{sig_dia.day} de {MESES_PY[sig_dia.month-1]} de {sig_dia.year}"
         else:
             fecha_inpc = fecha_fin_s
     except:
@@ -802,12 +801,42 @@ def generar_arrendamiento(datos, output_path):
 def generar_promesa(d, output_path):
     doc = setup_doc()
 
+    # ── Género ──
+    sv = str(d.get('sexo_vendedor', 'M') or 'M').upper()
+    sc = str(d.get('sexo_comprador', 'M') or 'M').upper()
+    def _g(sexo, m_val, f_val): return f_val if sexo == 'F' else m_val
+    el_vend   = _g(sv, 'EL', 'LA')
+    vend_str  = _g(sv, 'VENDEDOR', 'VENDEDORA')
+    prom_vend = f'PROMITENTE {vend_str}'
+    prop_vend = _g(sv, 'PROPIETARIO', 'PROPIETARIA')
+    mex_vend  = _g(sv, 'MEXICANO', 'MEXICANA')
+    el_comp   = _g(sc, 'EL', 'LA')
+    comp_str  = _g(sc, 'COMPRADOR', 'COMPRADORA')
+    prom_comp = f'PROMITENTE {comp_str}'
+    mex_comp  = _g(sc, 'MEXICANO', 'MEXICANA')
+
+    # ── Fechas ──
+    MESES_P = ['enero','febrero','marzo','abril','mayo','junio',
+               'julio','agosto','septiembre','octubre','noviembre','diciembre']
+    def _fp(v):
+        if not v: return ''
+        v = v.strip()
+        if ' de ' in v.lower(): return v.lower()
+        try:
+            parts = v.split('-')
+            if len(parts) == 3:
+                y,m,dn = int(parts[0]),int(parts[1]),int(parts[2])
+                return f"{dn} de {MESES_P[m-1]} de {y}"
+        except: pass
+        return v
+    def _fpu(v): return _fp(v).upper() if _fp(v) else ''
+
     precio_num, precio_letra  = fmt_monto(d['precio_total'])
     arras_num, arras_letra    = fmt_monto(d['monto_arras'])
     saldo_num, saldo_letra    = fmt_monto(d['monto_saldo'])
     pena_num, pena_letra      = fmt_monto(d.get('pena_convencional', d['monto_arras']))
 
-    fecha         = d['fecha_contrato']
+    fecha         = _fp(d['fecha_contrato'])
     nombre_vend   = d['nombre_vendedor'].upper()
     nombre_comp   = d['nombre_comprador'].upper()
     dir_inmueble  = d['direccion_inmueble'].upper()
@@ -820,7 +849,7 @@ def generar_promesa(d, output_path):
     registro      = d.get('registro', '___')
     dom_vend      = d['domicilio_vendedor'].upper()
     dom_comp      = d['domicilio_comprador'].upper()
-    fecha_limite  = d['fecha_limite_escritura']
+    fecha_limite  = _fp(d['fecha_limite_escritura'])
     forma_pago    = d.get('forma_pago_saldo', 'efectivo').lower()
 
     # ── ENCABEZADO ──
@@ -829,11 +858,11 @@ def generar_promesa(d, output_path):
 
     p(doc,
       f"CONTRATO PRIVADO DE PROMESA DE COMPRAVENTA QUE CELEBRAN POR UNA PARTE "
-      f"{nombre_vend}, PROPIETARIO DEL INMUEBLE UBICADO EN {dir_inmueble}, "
+      f"{nombre_vend}, {prop_vend} DEL INMUEBLE UBICADO EN {dir_inmueble}, "
       f"COLONIA {col_inmueble}, CÓDIGO POSTAL {cp_inmueble}, CORRESPONDIENTE AL "
       f"MUNICIPIO DE MORELIA, MICHOACÁN, A QUIEN EN LO SUCESIVO SE LE DENOMINARÁ "
-      f"\"EL PROMITENTE VENDEDOR\", Y POR LA OTRA PARTE {nombre_comp}, A QUIEN EN "
-      f"LO SUCESIVO SE LE DENOMINARÁ \"EL PROMITENTE COMPRADOR\", SUJETÁNDOSE LAS "
+      f"\"{el_vend} {prom_vend}\", Y POR LA OTRA PARTE {nombre_comp}, A QUIEN EN "
+      f"LO SUCESIVO SE LE DENOMINARÁ \"{el_comp} {prom_comp}\", SUJETÁNDOSE LAS "
       f"PARTES A LAS SIGUIENTES DECLARACIONES Y CLÁUSULAS:",
       bold=True)
 
@@ -842,13 +871,13 @@ def generar_promesa(d, output_path):
       align=WD_ALIGN_PARAGRAPH.CENTER)
 
     p(doc,
-      f"I.- Declara EL PROMITENTE VENDEDOR, bajo protesta de decir verdad, ser mexicano(a), "
+      f"I.- Declara {el_vend} {prom_vend}, bajo protesta de decir verdad, ser {mex_vend}, "
       f"mayor de edad, que es su voluntad celebrar este contrato promisorio y en su oportunidad "
       f"el contrato definitivo respectivo, que tiene las facultades necesarias y que no tiene "
       f"ningún impedimento legal para vender y quien se identifica con su credencial para votar "
       f"emitida por el Instituto Nacional Electoral, que en original exhibe y que se anexa al "
       f"presente instrumento en copia simple.\n\n"
-      f"Así mismo, declara bajo protesta de decir verdad, ser el legítimo propietario del "
+      f"Así mismo, declara bajo protesta de decir verdad, ser {el_vend.lower()} legítim{'a' if sv=='F' else 'o'} {prop_vend.lower()} del "
       f"INMUEBLE UBICADO EN {dir_inmueble}, COLONIA {col_inmueble}, CÓDIGO POSTAL {cp_inmueble}, "
       f"CORRESPONDIENTE AL MUNICIPIO DE MORELIA, MICHOACÁN, lo que demuestra con la escritura "
       f"pública número {escritura_num} pasada ante la fe del {notario_nombre}, notario público "
@@ -856,11 +885,11 @@ def generar_promesa(d, output_path):
       f"Público de la Propiedad bajo el tomo {tomo} y registro {registro} del libro de propiedad; "
       f"que este se encuentra libre de todo gravamen y que no existe impedimento legal alguno para "
       f"vender dicho inmueble.\n\n"
-      f"Así mismo EL PROMITENTE VENDEDOR señala como domicilio para recibir cualquier tipo de "
+      f"Así mismo {el_vend} {prom_vend} señala como domicilio para recibir cualquier tipo de "
       f"notificación el ubicado en {dom_vend}, CORRESPONDIENTE AL MUNICIPIO DE MORELIA, MICHOACÁN.")
 
     p(doc,
-      f"II.- Declara EL PROMITENTE COMPRADOR, bajo protesta de decir verdad, ser mexicano(a), "
+      f"II.- Declara {el_comp} {prom_comp}, bajo protesta de decir verdad, ser {mex_comp}, "
       f"mayor de edad, que es su voluntad celebrar este contrato promisorio y en su oportunidad "
       f"el contrato definitivo respectivo, que tiene las facultades necesarias para comprar, que "
       f"conoce el estado físico y jurídico del inmueble objeto de este contrato y los acepta, y "
@@ -885,7 +914,7 @@ def generar_promesa(d, output_path):
     clausula(doc, "PRIMERA.-", "OBJETO",
         f"El C. {nombre_vend} promete VENDER, y el C. {nombre_comp} promete COMPRAR para sí, "
         f"el inmueble descrito en la declaración I, en el estado físico en que se encuentra, "
-        f"que EL PROMITENTE VENDEDOR entregará libre de gravamen, al corriente en sus pagos "
+        f"que {el_vend} {prom_vend} entregará libre de gravamen, al corriente en sus pagos "
         f"de servicios e impuestos. Así mismo ambos se obligan a celebrar contrato definitivo "
         f"de compraventa ante la fe de un notario público.")
 
@@ -914,20 +943,20 @@ def generar_promesa(d, output_path):
         "el contrato de compraventa a más tardar a la fecha pactada por las partes.")
 
     clausula(doc, "QUINTA.-", "PENA CONVENCIONAL",
-        f"En caso de rescisión del presente contrato por causas imputables a EL PROMITENTE COMPRADOR, "
-        f"pagará a EL PROMITENTE VENDEDOR por concepto de pena convencional, la cantidad de {pena_num} "
+        f"En caso de rescisión del presente contrato por causas imputables a {el_comp} {prom_comp}, "
+        f"pagará a {el_vend} {prom_vend} por concepto de pena convencional, la cantidad de {pena_num} "
         f"({pena_letra}), a más tardar 3 días naturales posteriores a la notificación de su "
         f"incumplimiento; mismos que podrán ser pagados con el depósito a título de arras.\n\n"
-        f"En el caso de rescisión por causas imputables a EL PROMITENTE VENDEDOR, deberá pagar a "
-        f"EL PROMITENTE COMPRADOR la cantidad de {pena_num} ({pena_letra}), a más tardar 3 días "
+        f"En el caso de rescisión por causas imputables a {el_vend} {prom_vend}, deberá pagar a "
+        f"{el_comp} {prom_comp} la cantidad de {pena_num} ({pena_letra}), a más tardar 3 días "
         f"posteriores a la notificación de su incumplimiento, además de devolver íntegramente todas "
         f"las cantidades que le hayan sido entregadas.")
 
     clausula(doc, "SEXTA.-", "GASTOS E IMPUESTOS",
-        "Acuerdan los contratantes que los gastos, impuestos, derechos y honorarios que se originen "
-        "con motivo de la escritura definitiva de compraventa correrán por parte de EL PROMITENTE "
-        "COMPRADOR, a excepción del impuesto sobre la renta que en caso de generarse, lo cubrirá "
-        "EL PROMITENTE VENDEDOR.")
+        f"Acuerdan los contratantes que los gastos, impuestos, derechos y honorarios que se originen "
+        f"con motivo de la escritura definitiva de compraventa correrán por parte de {el_comp} {prom_comp}, "
+        f"a excepción del impuesto sobre la renta que en caso de generarse, lo cubrirá "
+        f"{el_vend} {prom_vend}.")
 
     clausula(doc, "SÉPTIMA.-", "CONFIDENCIALIDAD",
         "Las partes se obligan a mantener de forma confidencial toda la información y documentación "
@@ -946,6 +975,24 @@ def generar_promesa(d, output_path):
         "ambos se someten expresamente a la jurisdicción y tribunales competentes de la ciudad de "
         "Morelia, Michoacán, renunciando a cualquier fuero presente o futuro que les pudiera "
         "corresponder por razón de domicilio.")
+
+    # ── CLÁUSULAS ESPECIALES (inmediatamente después de NOVENA) ──
+    ORDINALES_P = ['DÉCIMA','UNDÉCIMA','DUODÉCIMA','DECIMOTERCERA','DECIMOCUARTA',
+                   'DECIMOQUINTA','DECIMOSEXTA','DECIMOSÉPTIMA','DECIMOCTAVA','DECIMONOVENA']
+    clausulas_esp = d.get('clausulas_especiales', [])
+    import re as _re2
+    for idx_cl, cl_text in enumerate(clausulas_esp):
+        if not cl_text.strip(): continue
+        ordinal = ORDINALES_P[idx_cl] if idx_cl < len(ORDINALES_P) else f'VIGÉSIMA {idx_cl}'
+        lines = [l.strip() for l in cl_text.strip().split('\n') if l.strip()]
+        subject = ''
+        body_lines = lines
+        m2 = _re2.match(r'^[A-ZÁÉÍÓÚÑ\s]+\.-\s*([A-ZÁÉÍÓÚÑ\s]+)\.-\s*(.*)', lines[0])
+        if m2:
+            subject = m2.group(1).strip()
+            rest = m2.group(2).strip()
+            body_lines = ([rest] if rest else []) + lines[1:]
+        clausula(doc, f"{ordinal}.-", subject or ordinal, ' '.join(body_lines))
 
     # ── CIERRE ──
     doc.add_paragraph()
@@ -979,8 +1026,8 @@ def generar_promesa(d, output_path):
         r3 = p3.add_run(nombre.upper())
         r3.font.size = Pt(9)
 
-    sig_cell2(cells[0], "EL PROMITENTE VENDEDOR", nombre_vend)
-    sig_cell2(cells[1], "EL PROMITENTE COMPRADOR", nombre_comp)
+    sig_cell2(cells[0], f"{el_vend} {prom_vend}", nombre_vend)
+    sig_cell2(cells[1], f"{el_comp} {prom_comp}", nombre_comp)
 
     # Remove table borders
     for cell in table.rows[0].cells:
@@ -993,23 +1040,6 @@ def generar_promesa(d, output_path):
             tcBorders.append(border)
             tcPr.append(tcBorders)
 
-
-    # ── CLÁUSULAS ESPECIALES REDACTADAS POR IA ──
-    clausulas_esp = datos.get('clausulas_especiales', [])
-    if clausulas_esp:
-        p(doc, '', space_before=12)
-        p(doc, 'CLÁUSULAS ESPECIALES', bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, size=11)
-        p(doc, '', space_before=4)
-        for cl_text in clausulas_esp:
-            if cl_text.strip():
-                # Each clause block — already formatted by AI
-                for line in cl_text.strip().split('\n'):
-                    line = line.strip()
-                    if not line:
-                        continue
-                    is_header = (line.isupper() and len(line) < 60) or line.endswith('.-')
-                    p(doc, line, bold=is_header, space_before=(8 if is_header else 0))
-        p(doc, '', space_before=6)
 
     doc.save(output_path)
     print(f"✓ Promesa de compraventa generada: {output_path}")

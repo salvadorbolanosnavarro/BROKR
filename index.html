@@ -665,7 +665,7 @@ html, body {
   overflow: hidden;
   box-shadow: 0 16px 48px rgba(0,0,0,0.40);
   border: 1px solid rgba(42,157,181,0.25);
-  max-height: min(380px, calc(100dvh - 160px));
+  max-height: min(285px, calc(100dvh - 160px));
 }
 /* scw- styles used inside popup */
 .shaark-popup .scw-header {
@@ -3128,6 +3128,8 @@ function toggleVoice(){
   startVoice();
 }
 async function startVoice(){
+  // Unlock TTS during user gesture so speak() works after async fetch
+  if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(''); window.speechSynthesis.speak(u); }
   const ok = await ensureMicPermission();
   if (!ok) return;
   // Pause wake-word while recording
@@ -4105,6 +4107,9 @@ async function saveApiKey() {
     }
     localStorage.setItem('eb_api_key', key);
     if (userProfile) userProfile.eb_api_key = key;
+    // Persist on backend server
+    const apiBase = 'https://brokrebapi-production.up.railway.app';
+    try { await fetch(apiBase + '/config/eb-key', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key}) }); } catch(_){}
     if (status) { status.className = 'prf-api-status ok'; status.textContent = '✓ API key guardada correctamente.'; }
   } catch(e) {
     if (status) { status.className = 'prf-api-status err'; status.textContent = 'Error al guardar. Intenta de nuevo.'; }

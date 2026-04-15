@@ -9,9 +9,11 @@ import asyncio
 import base64
 import uuid as _uuid
 import io
+import json
 import concurrent.futures
 from typing import Optional, List
 from datetime import datetime
+from pathlib import Path
 
 # Pillow
 try:
@@ -38,7 +40,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-EB_API_KEY       = os.environ.get("EB_API_KEY", "")
+CONFIG_FILE = Path(__file__).parent / "config.json"
+
+def load_config() -> dict:
+    try:
+        if CONFIG_FILE.exists():
+            return json.loads(CONFIG_FILE.read_text())
+    except Exception:
+        pass
+    return {}
+
+def save_config(data: dict):
+    try:
+        CONFIG_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+    except Exception:
+        pass
+
+_config = load_config()
+
+EB_API_KEY       = os.environ.get("EB_API_KEY", "") or _config.get("eb_api_key", "")
 GROQ_API_KEY     = os.environ.get("GROQ_API_KEY", "")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY", "")
@@ -84,6 +104,28 @@ def eb_headers(key: str = None):
 @app.get("/")
 def root():
     return {"status": "Brokr API activa", "version": "4.0"}
+
+# ────────────────────────────────────────────
+# CONFIG — EB API KEY PERSISTENCE
+# ────────────────────────────────────────────
+class EbKeyRequest(BaseModel):
+    key: str
+
+@app.post("/config/eb-key")
+async def set_eb_key(req: EbKeyRequest):
+    global EB_API_KEY, _config
+    EB_API_KEY = req.key.strip()
+    _config["eb_api_key"] = EB_API_KEY
+    save_config(_config)
+    return {"ok": True, "saved": True}
+
+@app.get("/config/eb-key")
+async def get_eb_key():
+    if EB_API_KEY and len(EB_API_KEY) > 4:
+        masked = "*" * (len(EB_API_KEY) - 4) + EB_API_KEY[-4:]
+    else:
+        masked = ""
+    return {"configured": bool(EB_API_KEY), "masked": masked}
 
 # ────────────────────────────────────────────
 # GROQ CHAT PROXY
