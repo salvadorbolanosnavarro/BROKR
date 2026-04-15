@@ -2654,15 +2654,41 @@ async function authInit(){
     }
     userProfile = data[0];
     currentUser = user;
+    // Si Supabase no tiene la eb_api_key pero localStorage sí, recuperarla y resincronizar
+    if (!userProfile.eb_api_key) {
+      const localKey = localStorage.getItem('eb_api_key');
+      if (localKey) {
+        userProfile.eb_api_key = localKey;
+        // Guardar en Supabase en background
+        const _t = localStorage.getItem('sb_token') || sessionStorage.getItem('sb_token');
+        if (_t) fetch(SB_URL_AUTH + '/rest/v1/usuarios?id=eq.' + user.id, {
+          method:'PATCH', headers:{ 'apikey':SB_KEY_AUTH, 'Authorization':'Bearer '+_t,
+            'Content-Type':'application/json', 'Prefer':'return=minimal' },
+          body: JSON.stringify({ eb_api_key: localKey })
+        }).catch(()=>{});
+      }
+    }
     // Sincronizar perfil fresco en localStorage para que cambios de plan sean inmediatos
     const storage = localStorage.getItem('sb_token') ? localStorage : sessionStorage;
     storage.setItem('sb_user_profile', JSON.stringify(userProfile));
+    // Re-sincronizar API key al backend (por si el servidor se reinició y perdió config.json)
+    if (userProfile.eb_api_key) {
+      fetch('https://brokrebapi-production.up.railway.app/config/eb-key', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key: userProfile.eb_api_key })
+      }).catch(()=>{});
+    }
     applyUserPermissions();
   } catch(e){
     // Si hay error de red, usar perfil guardado previamente si existe
     const saved = localStorage.getItem('sb_user_profile') || sessionStorage.getItem('sb_user_profile');
     if(saved){ try{ userProfile = JSON.parse(saved); }catch(e2){} }
     if(!userProfile) userProfile = { plan:'free', modulos:['ficha-manual'], activo:true };
+    // Fallback: fusionar eb_api_key del localStorage independiente si no está en perfil cacheado
+    if (userProfile && !userProfile.eb_api_key) {
+      const localKey = localStorage.getItem('eb_api_key');
+      if (localKey) userProfile.eb_api_key = localKey;
+    }
     applyUserPermissions();
   }
 }
@@ -4107,6 +4133,10 @@ async function saveApiKey() {
     }
     localStorage.setItem('eb_api_key', key);
     if (userProfile) userProfile.eb_api_key = key;
+    // Actualizar caché sb_user_profile para que persista si falla la red al recargar
+    const _ebSto = localStorage.getItem('sb_token') ? localStorage : sessionStorage;
+    const _ebCached = _ebSto.getItem('sb_user_profile');
+    if (_ebCached) { try { const _p = JSON.parse(_ebCached); _p.eb_api_key = key; _ebSto.setItem('sb_user_profile', JSON.stringify(_p)); } catch(_){} }
     // Persist on backend server
     const apiBase = 'https://brokrebapi-production.up.railway.app';
     try { await fetch(apiBase + '/config/eb-key', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key}) }); } catch(_){}

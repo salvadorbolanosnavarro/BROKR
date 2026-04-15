@@ -996,6 +996,248 @@ async def generar_contrato(req: ContratoRequest):
         except: pass
 
 
+# ── CONTRATOS PERSONALIZADOS (MACHOTES) ─────────────────────────
+
+from fastapi import Form as FastAPIForm
+
+@app.post("/contrato/analizar")
+async def analizar_machote(
+    file: UploadFile = File(...),
+    tipo: str = FastAPIForm(default=""),
+):
+    """
+    Analiza un DOCX subido por el usuario y detecta los campos variables.
+    Soporta: {{campo}}, {campo}, [CAMPO], <<campo>>, y blancos (___).
+    Si no detecta patrones, usa IA para identificar los campos variables.
+    """
+    import io, re
+    from docx import Document as DocxDocument
+
+    content = await file.read()
+    try:
+        doc = DocxDocument(io.BytesIO(content))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo leer el archivo DOCX: {e}")
+
+    # Extraer todo el texto (párrafos + celdas de tabla)
+    partes = []
+    for p in doc.paragraphs:
+        if p.text.strip():
+            partes.append(p.text)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    if p.text.strip():
+                        partes.append(p.text)
+    full_text = "\n".join(partes)
+
+    # Patrones de detección de variables (orden de prioridad)
+    patrones_regex = [
+        (r'\{\{([^}]{1,60})\}\}',   '{{{}}}'),   # {{campo}}
+        (r'\{([^}]{1,60})\}',        '{}'),        # {campo}
+        (r'<<([^>]{1,60})>>',        '<<{}>>'),    # <<campo>>
+        (r'\[([A-ZÁÉÍÓÚÜÑ][^[\]]{0,58})\]', '[{}]'),  # [CAMPO] mayúsculas
+        (r'\[([a-záéíóúüñ][^[\]]{0,58})\]', '[{}]'),  # [campo] minúsculas
+    ]
+
+    campos = []
+    patron_usado = None
+
+    for regex, fmt in patrones_regex:
+        matches = re.findall(regex, full_text, re.IGNORECASE)
+        if matches:
+            seen = set()
+            for m in matches:
+                nombre_original = m.strip()
+                slug = re.sub(r'[^a-z0-9_]', '_', nombre_original.lower().strip())
+                slug = re.sub(r'_+', '_', slug).strip('_') or 'campo'
+                if slug not in seen:
+                    seen.add(slug)
+                    campos.append({
+                        "id": slug,
+                        "label": nombre_original.replace('_', ' ').strip(),
+                        "tipo_input": "text",
+                        "patron_texto": nombre_original,
+                        "patron_fmt": fmt,
+                    })
+            patron_usado = fmt
+            break
+
+    # Detección de blancos (líneas de subrayado: ___ 3+ guiones bajos consecutivos)
+    if not campos:
+        blancos = re.findall(r'_{3,}', full_text)
+        if blancos:
+            for i, _ in enumerate(set(map(len, blancos)), start=1):
+                campos.append({
+                    "id": f"campo_{i}",
+                    "label": f"Campo {i}",
+                    "tipo_input": "text",
+                    "patron_texto": None,
+                    "patron_fmt": "blank",
+                })
+            patron_usado = "blank"
+
+    # Si no se detectaron patrones, usar IA
+    if not campos and os.environ.get('GROQ_API_KEY'):
+        tipo_label = tipo if tipo else "contrato"
+        prompt_ia = (
+            "Eres un asistente que analiza contratos legales mexicanos.\n\n"
+            f"Analiza el siguiente texto de un {tipo_label} e identifica TODOS los campos "
+            "variables (nombres de partes, fechas, montos, direcciones, plazos, etc.).\n\n"
+            "Devuelve ÚNICAMENTE un JSON válido con esta estructura (sin explicaciones extra):\n"
+            '{"campos": [{"id": "nombre_snake_case", "label": "Nombre legible", "tipo_input": "text|number|date|currency"}]}\n\n'
+            f"Texto del contrato (primeros 3000 caracteres):\n{full_text[:3000]}"
+        )
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                r = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {os.environ.get('GROQ_API_KEY','')}",
+                             "Content-Type": "application/json"},
+                    json={"model": "llama-3.3-70b-versatile",
+                          "messages": [{"role": "user", "content": prompt_ia}],
+                          "max_tokens": 1000, "temperature": 0.1}
+                )
+            if r.status_code == 200:
+                txt = r.json()["choices"][0]["message"]["content"].strip()
+                # Extraer JSON aunque venga con texto extra
+                json_match = re.search(r'\{.*\}', txt, re.DOTALL)
+                if json_match:
+                    ia_data = _json.loads(json_match.group())
+                    for c in ia_data.get("campos", []):
+                        c.setdefault("patron_texto", None)
+                        c.setdefault("patron_fmt", "ia")
+                        campos.append(c)
+                    patron_usado = "ia"
+        except Exception as e:
+            print(f"Error IA analizar_machote: {e}")
+
+    # Inferir tipo_input por el nombre del campo
+    TIPO_HINTS = {
+        "fecha": "date", "date": "date", "dia": "date",
+        "monto": "currency", "precio": "currency", "renta": "currency",
+        "pago": "currency", "importe": "currency", "valor": "currency",
+        "cantidad": "number", "plazo": "number", "dias": "number",
+        "meses": "number", "años": "number", "superficie": "number",
+        "metros": "number", "m2": "number",
+    }
+    for c in campos:
+        if c.get("tipo_input") in (None, "text"):
+            label_lower = c.get("label", "").lower()
+            for hint, tipo_inp in TIPO_HINTS.items():
+                if hint in label_lower:
+                    c["tipo_input"] = tipo_inp
+                    break
+
+    return {
+        "campos": campos,
+        "patron_usado": patron_usado,
+        "detectado_automaticamente": bool(campos),
+        "texto_preview": full_text[:600],
+    }
+
+
+@app.post("/contrato/generar-machote")
+async def generar_desde_machote(
+    file: UploadFile = File(...),
+    datos: str = FastAPIForm(...),
+    tipo: str = FastAPIForm(default="contrato_personalizado"),
+):
+    """
+    Rellena un DOCX machote con los datos proporcionados.
+    Reemplaza {{campo}}, {campo}, <<campo>>, [CAMPO] con los valores del formulario.
+    """
+    import io, re
+    from docx import Document as DocxDocument
+    from copy import deepcopy
+
+    content = await file.read()
+    try:
+        valores = _json.loads(datos)
+    except Exception:
+        raise HTTPException(status_code=400, detail="El campo 'datos' debe ser JSON válido.")
+
+    try:
+        doc = DocxDocument(io.BytesIO(content))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo leer el archivo DOCX: {e}")
+
+    def reemplazar_texto(texto: str, vals: dict) -> str:
+        for campo_id, valor in vals.items():
+            valor_str = str(valor) if valor is not None else ""
+            # Probar todos los patrones posibles para ese campo
+            # Buscamos tanto por id (slug) como por el label original
+            patrones_campo = [
+                "{{" + campo_id + "}}",
+                "{" + campo_id + "}",
+                "<<" + campo_id + ">>",
+                "[" + campo_id + "]",
+                "[" + campo_id.upper() + "]",
+                "[" + campo_id.replace('_', ' ').title() + "]",
+                "{{" + campo_id.replace('_', ' ') + "}}",
+                "<<" + campo_id.replace('_', ' ') + ">>",
+            ]
+            # También reemplazar por el label original si se pasó
+            label_original = vals.get(f"__label_{campo_id}")
+            if label_original:
+                patrones_campo += [
+                    "{{" + label_original + "}}",
+                    "{" + label_original + "}",
+                    "<<" + label_original + ">>",
+                    "[" + label_original + "]",
+                    "[" + label_original.upper() + "]",
+                ]
+            for patron in patrones_campo:
+                if patron in texto:
+                    texto = texto.replace(patron, valor_str)
+        return texto
+
+    def reemplazar_run(run, vals):
+        if run.text:
+            run.text = reemplazar_texto(run.text, vals)
+
+    # Reemplazar en párrafos
+    for p in doc.paragraphs:
+        for run in p.runs:
+            reemplazar_run(run, valores)
+        # Manejar caso donde el patrón está partido entre runs
+        texto_completo = p.text
+        texto_reemplazado = reemplazar_texto(texto_completo, valores)
+        if texto_reemplazado != texto_completo and p.runs:
+            p.runs[0].text = texto_reemplazado
+            for run in p.runs[1:]:
+                run.text = ""
+
+    # Reemplazar en tablas
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    for run in p.runs:
+                        reemplazar_run(run, valores)
+                    texto_completo = p.text
+                    texto_reemplazado = reemplazar_texto(texto_completo, valores)
+                    if texto_reemplazado != texto_completo and p.runs:
+                        p.runs[0].text = texto_reemplazado
+                        for run in p.runs[1:]:
+                            run.text = ""
+
+    # Guardar DOCX en archivo temporal
+    with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as f:
+        output_path = f.name
+    doc.save(output_path)
+
+    tipo_limpio = re.sub(r'[^a-zA-Z0-9_]', '_', tipo)
+    filename = f"Contrato_{tipo_limpio}.docx"
+
+    return FileResponse(
+        output_path,
+        media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        filename=filename,
+    )
+
+
 # ── PDF GENERATION ──────────────────────────────────────────────
 from playwright.async_api import async_playwright
 import base64, asyncio
