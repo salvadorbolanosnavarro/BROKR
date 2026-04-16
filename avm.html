@@ -562,7 +562,7 @@
           const r = await fetch(`${API}/avm-pdf`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ resultado, agente: "Brokr" })
+            body: JSON.stringify({ resultado, agente: "Agente BROKR®" })
           });
           const data = await r.json();
           if (!r.ok) throw new Error(data.detail || "Error generando PDF");
@@ -687,6 +687,7 @@
 
       // ── ESTADO: RESULTADO ──
       if (estado === "result" && resultado) {
+        const confianza = resultado.nivel_confianza || "media";
         const vpm = resultado.valor_por_m2 || 0;
         const comparables = resultado.comparables || [];
         const factores = resultado.factores_ajuste || [];

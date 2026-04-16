@@ -1309,7 +1309,7 @@ async def generar_avm_pdf(p: dict):
     from playwright.async_api import async_playwright
 
     resultado = p.get("resultado", {})
-    agente = p.get("agente", "Powered by Brokr")
+    agente = p.get("agente", "Agente BROKR®")
 
     if not resultado:
         raise HTTPException(status_code=400, detail="Resultado vacío")
@@ -1429,10 +1429,12 @@ async def generar_avm_pdf(p: dict):
 
   <div class="hdr">
     <div>
+      <div class="hdr-logo">BROKR<span>®</span></div>
+      <div style="font-size:10px;color:#9aa0ad;margin-top:2px;">Tu Co-Piloto Inmobiliario</div>
     </div>
     <div class="hdr-right">
       <div class="doc-title">Opinión de Valor</div>
-      <div class="doc-sub">{fecha_hoy}</div>
+      <div class="doc-sub">Análisis de Mercado con IA · {fecha_hoy}</div>
       <div class="doc-sub" style="margin-top:3px;">{agente}</div>
     </div>
   </div>
@@ -1495,8 +1497,8 @@ async def generar_avm_pdf(p: dict):
   </div>
 
   <div class="footer">
-    <span>Brokr AI</span>
-    <span>{fecha_hoy}</span>
+    <span>BROKR® — Tu Co-Piloto Inmobiliario · app.navarroai.com.mx</span>
+    <span>Generado con IA · {fecha_hoy}</span>
   </div>
 
 </div>
