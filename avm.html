@@ -601,9 +601,9 @@
       if (estado === "idle" || estado === "error") return (
         <div className="avm-body">
           <div className="avm-card">
-            <div className="card-label">Análisis con IA y búsqueda en internet</div>
+            <div className="card-label">Brokr AI</div>
             <p style={{ fontSize: 12, color: "var(--gray-600)", marginBottom: 14, lineHeight: 1.6 }}>
-              La IA busca comparables reales en Lamudi, Vivanuncios e Inmuebles24 y genera una opinión de valor fundamentada con datos de mercado actuales.
+              Nuestra IA busca comparables en tiempo real en los mejores portales inmobiliarios y utiliza su criterio entrenado y conocimientos periciales para emitir un resultado fundamentado. Brokr recomienda no eemplazar el avalúo realizado por un perito certificado.
             </p>
 
             <div className="field-row" style={{ marginBottom: 14 }}>
@@ -645,11 +645,11 @@
             <div className="field-row">
               {(esTerreno || esConstruccion) &&
                 <F label="m² de terreno">
-                  <NI value={form.m2_terreno} onChange={v => u("m2_terreno",v)} placeholder="183" />
+                  <NI value={form.m2_terreno} onChange={v => u("m2_terreno",v)} placeholder="200" />
                 </F>}
               {esConstruccion &&
                 <F label="m² construidos *">
-                  <NI value={form.m2_construccion} onChange={v => u("m2_construccion",v)} placeholder="150" />
+                  <NI value={form.m2_construccion} onChange={v => u("m2_construccion",v)} placeholder="200" />
                 </F>}
             </div>
             {esTerreno && (
@@ -688,7 +688,7 @@
           )}
 
           <button id="btn-analizar-ia" className="btn-primary teal" onClick={analizar}>
-            🔍 Analizar con IA y web
+            Generar opinión de valor
           </button>
         </div>
       );
