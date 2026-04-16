@@ -562,7 +562,7 @@
           const r = await fetch(`${API}/avm-pdf`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ resultado, agente: "Agente BROKR®" })
+            body: JSON.stringify({ resultado, agente: "Brokr" })
           });
           const data = await r.json();
           if (!r.ok) throw new Error(data.detail || "Error generando PDF");
