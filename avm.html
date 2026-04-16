@@ -562,17 +562,6 @@
       return (
         <div style={{ fontFamily: "'Poppins', sans-serif", background: "var(--screen-bg)", minHeight: "100vh" }}>
 
-          {/* HEADER */}
-          <div className="avm-header">
-            <div className="avm-header-row">
-              <div>
-                <div className="avm-title">BROKR®</div>
-                <div className="avm-sub">Avalúo Digital</div>
-              </div>
-              <div style={{ fontSize: 30 }}>{(TIPOS.find((t) => t.id === sujeto.tipo) || TIPOS[0]).icon}</div>
-            </div>
-          </div>
-
           {/* TABS */}
           <div className="avm-tabs">
             {tabs.map((t, i) => (
