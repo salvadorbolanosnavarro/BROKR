@@ -203,6 +203,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
 .phase-dot.done{background:var(--teal);border-color:var(--teal);color:#fff}
 .phase-dot.current{background:var(--navy);border-color:var(--navy);color:#fff}
 .phase-sep{flex:1;height:1px;background:var(--silver2)}
+
+/* ── CONTACT / PROPERTY PICKERS ── */
+.pick-btn{display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:5px 10px;border:1.5px solid var(--teal);border-radius:6px;background:var(--tealp);color:var(--teal2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;text-transform:uppercase;letter-spacing:.04em}
+.pick-btn:hover{background:var(--teal);color:#fff}
+.pick-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.pick-overlay.open{display:flex}
+.pick-sheet{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:780px;max-height:88vh;display:flex;flex-direction:column;animation:pickUp .22s ease}
+@keyframes pickUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pick-handle{width:36px;height:4px;background:var(--silver2);border-radius:2px;margin:10px auto;flex-shrink:0}
+.pick-head{display:flex;align-items:center;gap:10px;padding:0 18px 12px;border-bottom:1px solid var(--silver2);flex-shrink:0}
+.pick-head-title{font-size:15px;font-weight:700;color:var(--navy);flex:1}
+.pick-close{width:30px;height:30px;border:none;background:var(--silver);border-radius:7px;cursor:pointer;font-size:14px;color:var(--mut)}
+.pick-search{padding:12px 18px;flex-shrink:0}
+.pick-search input{width:100%;background:var(--silver);border:1.5px solid var(--silver2);border-radius:8px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border .15s}
+.pick-search input:focus{border-color:var(--teal)}
+.pick-list{flex:1;overflow-y:auto;padding:0 0 20px}
+.pick-item{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--silver2);cursor:pointer;transition:background .1s}
+.pick-item:hover{background:var(--tealp)}
+.pick-item:last-child{border-bottom:none}
+.pick-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.pick-info{flex:1;min-width:0}
+.pick-name{font-size:14px;font-weight:600;color:var(--navy)}
+.pick-sub{font-size:12px;color:var(--mut);margin-top:2px}
+.pick-role{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:8px;margin-left:4px}
+.pick-empty{text-align:center;padding:40px 20px;color:var(--mut);font-size:13px}
+.prop-pick-item{padding:12px 18px;border-bottom:1px solid var(--silver2);cursor:pointer;transition:background .1s}
+.prop-pick-item:hover{background:var(--tealp)}
+.prop-pick-name{font-size:14px;font-weight:600;color:var(--navy)}
+.prop-pick-sub{font-size:12px;color:var(--mut);margin-top:2px}
+.prop-pick-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:8px;margin-right:4px}
+.badge-venta{background:#f0fdf4;color:#15803d}.badge-renta{background:#eff6ff;color:#1d4ed8}
 </style>
 </head>
 <body>
@@ -279,6 +310,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
     <!-- ══ SECCIÓN 2: INMUEBLE ══ -->
     <div class="card">
       <div class="card-title">🏠 Inmueble arrendado</div>
+      <button class="pick-btn" onclick="abrirPickerInmueble('arrendamiento')" style="margin-bottom:10px">🏘 Seleccionar de Mis Inmuebles</button>
       <div class="f-note" style="margin-bottom:10px">Esta dirección se usará en múltiples secciones del contrato automáticamente.</div>
 
       <div class="frow">
@@ -332,6 +364,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
     <!-- ══ SECCIÓN 3: ARRENDADOR ══ -->
     <div class="card">
       <div class="card-title">👤 Arrendador (propietario)</div>
+      <button class="pick-btn" onclick="abrirPickerContacto('arrendador')">📋 Seleccionar de Mis Contactos</button>
+      <div style="height:10px"></div>
       <div class="frow">
         <div class="f" style="flex:2">
           <label>Nombre completo del arrendador</label>
@@ -380,6 +414,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
     <!-- ══ SECCIÓN 4: ARRENDATARIO ══ -->
     <div class="card">
       <div class="card-title">👤 Arrendatario (inquilino)</div>
+      <button class="pick-btn" onclick="abrirPickerContacto('arrendatario')">📋 Seleccionar de Mis Contactos</button>
+      <div style="height:10px"></div>
       <div class="frow">
         <div class="f" style="flex:2">
           <label>Nombre completo del arrendatario</label>
@@ -399,6 +435,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
     <!-- ══ SECCIÓN 5: OBLIGADO SOLIDARIO ══ -->
     <div class="card">
       <div class="card-title">🤝 Obligado solidario</div>
+      <button class="pick-btn" onclick="abrirPickerContacto('os')">📋 Seleccionar de Mis Contactos</button>
+      <div style="height:10px"></div>
       <div class="frow">
         <div class="f" style="flex:2">
           <label>Nombre completo del obligado solidario</label>
@@ -555,6 +593,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
 
     <div class="card">
       <div class="card-title">Datos del inmueble</div>
+      <button class="pick-btn" onclick="abrirPickerInmueble('promesa')" style="margin-bottom:10px">🏘 Seleccionar de Mis Inmuebles</button>
       <div class="frow one">
         <div class="f">
           <label>Calle y número</label>
@@ -605,6 +644,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
 
     <div class="card">
       <div class="card-title">Promitente vendedor</div>
+      <button class="pick-btn" onclick="abrirPickerContacto('vendedor')">📋 Seleccionar de Mis Contactos</button>
+      <div style="height:10px"></div>
       <div class="frow one">
         <div class="f">
           <label>Nombre completo</label>
@@ -630,6 +671,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--silver);color:var(--txt);
 
     <div class="card">
       <div class="card-title">Promitente comprador</div>
+      <button class="pick-btn" onclick="abrirPickerContacto('comprador')">📋 Seleccionar de Mis Contactos</button>
+      <div style="height:10px"></div>
       <div class="frow one">
         <div class="f">
           <label>Nombre completo</label>
@@ -1506,6 +1549,159 @@ function calcularSaldo(){
 }
 
 // ══ SHAARK — llenar formulario vía postMessage ══
+// ══ CONTACT PICKER ══════════════════════════════════════════════════════════
+const AV_COLORS=['#2a9db5','#8b5cf6','#10b981','#f59e0b','#e11d48','#0ea5e9','#1a2744','#059669'];
+const ROLES_LABEL={arrendador:'Propietario',arrendatario:'Inquilino',comprador:'Comprador',vendedor:'Vendedor',obligado_solidario:'Oblig. solidario',colega:'Colega',notario:'Notario',otro:'Otro'};
+const ROLES_CSS_STR={arrendador:'background:#e8f7fa;color:#1a7a8f',arrendatario:'background:#eef2ff;color:#4338ca',comprador:'background:#fef3c7;color:#92400e',vendedor:'background:#f0fdf4;color:#15803d',obligado_solidario:'background:#fdf4ff;color:#7e22ce',colega:'background:#fff7ed;color:#9a3412',notario:'background:#f0f9ff;color:#0369a1',otro:'background:#f9fafb;color:#374151'};
+let pickerContexto = null;
+let propPickerContexto = null;
+
+function pickAvColor(nombre){let h=0;for(let i=0;i<nombre.length;i++)h=(h*31+nombre.charCodeAt(i))|0;return AV_COLORS[Math.abs(h)%8]}
+function pickInitials(n){const p=n.trim().split(/\s+/);return p.length>=2?(p[0][0]+p[1][0]).toUpperCase():n.slice(0,2).toUpperCase()}
+function cargarContactos(){return JSON.parse(localStorage.getItem('brokr_contactos')||'[]')}
+
+function abrirPickerContacto(contexto) {
+  pickerContexto = contexto;
+  const tituloMap = {arrendador:'Seleccionar arrendador',arrendatario:'Seleccionar arrendatario',os:'Seleccionar obligado solidario',vendedor:'Seleccionar vendedor',comprador:'Seleccionar comprador'};
+  document.getElementById('pick-contact-title').textContent = tituloMap[contexto] || 'Seleccionar contacto';
+  document.getElementById('pick-contact-search').value = '';
+  renderPickerContactos('');
+  document.getElementById('pick-contact-ov').classList.add('open');
+}
+function cerrarPickerContacto() { document.getElementById('pick-contact-ov').classList.remove('open'); }
+
+function renderPickerContactos(q) {
+  const contactos = cargarContactos();
+  const filtrados = contactos.filter(c => !q || [c.nombre,c.telefono,c.email].some(v=>(v||'').toLowerCase().includes(q.toLowerCase())));
+  const lista = document.getElementById('pick-contact-list');
+  if (!filtrados.length) {
+    lista.innerHTML = `<div class="pick-empty">${contactos.length?'Sin coincidencias.':'No tienes contactos guardados.<br>Ve a <strong>Mis Contactos</strong> para agregarlos.'}</div>`;
+    return;
+  }
+  lista.innerHTML = filtrados.map(c => {
+    const col = pickAvColor(c.nombre);
+    const rolStyle = ROLES_CSS_STR[c.tipo] || ROLES_CSS_STR.otro;
+    return `<div class="pick-item" onclick="seleccionarContacto('${c.id}')">
+      <div class="pick-av" style="background:${col}">${pickInitials(c.nombre)}</div>
+      <div class="pick-info">
+        <div class="pick-name">${c.nombre} <span class="pick-role" style="${rolStyle}">${ROLES_LABEL[c.tipo]||'Otro'}</span></div>
+        <div class="pick-sub">${[c.telefono,c.email].filter(Boolean).join(' · ')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function seleccionarContacto(id) {
+  const c = cargarContactos().find(x => x.id === id);
+  if (!c) return;
+  const ctx = pickerContexto;
+  const up = (el, v) => { if(el) el.value=(v||'').toUpperCase(); };
+  const sv = (el, v) => { if(el) el.value=v||''; };
+  if (ctx === 'arrendador') {
+    up(document.getElementById('a-arrendador'), c.nombre);
+    if (c.sexo) setSexo('arr', c.sexo, document.querySelector(`#sexo-arr .sexo-btn[data-sexo="${c.sexo}"]`));
+    up(document.getElementById('a-calle-arr'), c.calle);
+    up(document.getElementById('a-numext-arr'), c.num_ext);
+    up(document.getElementById('a-numint-arr'), c.num_int);
+    up(document.getElementById('a-colonia-arr'), c.colonia);
+    sv(document.getElementById('a-cp-arr'), c.cp);
+    up(document.getElementById('a-mpio-arr'), c.mpio);
+    if (c.banco || c.cuenta) sv(document.getElementById('a-banco'), [c.banco,c.cuenta].filter(Boolean).join(' '));
+  } else if (ctx === 'arrendatario') {
+    up(document.getElementById('a-arrendatario'), c.nombre);
+    if (c.sexo) setSexo('arrt', c.sexo, document.querySelector(`#sexo-arrt .sexo-btn[data-sexo="${c.sexo}"]`));
+  } else if (ctx === 'os') {
+    up(document.getElementById('a-os'), c.nombre);
+    if (c.sexo) setSexo('os', c.sexo, document.querySelector(`#sexo-os .sexo-btn[data-sexo="${c.sexo}"]`));
+    up(document.getElementById('a-calle-os'), c.calle);
+    up(document.getElementById('a-numext-os'), c.num_ext);
+    up(document.getElementById('a-numint-os'), c.num_int);
+    up(document.getElementById('a-colonia-os'), c.colonia);
+    sv(document.getElementById('a-cp-os'), c.cp);
+    up(document.getElementById('a-mpio-os'), c.mpio);
+  } else if (ctx === 'vendedor') {
+    up(document.getElementById('p-vendedor'), c.nombre);
+    if (c.sexo) setSexo('vend', c.sexo, document.querySelector(`#sexo-vend .sexo-btn[data-sexo="${c.sexo}"]`));
+    const dom=[c.calle,c.num_ext?'No. '+c.num_ext:'',c.num_int?'Int. '+c.num_int:'',c.colonia?'Col. '+c.colonia:'',c.cp?'C.P. '+c.cp:'',c.mpio].filter(Boolean).join(', ');
+    up(document.getElementById('p-dom-vend'), dom);
+  } else if (ctx === 'comprador') {
+    up(document.getElementById('p-comprador'), c.nombre);
+    if (c.sexo) setSexo('comp', c.sexo, document.querySelector(`#sexo-comp .sexo-btn[data-sexo="${c.sexo}"]`));
+    const dom=[c.calle,c.num_ext?'No. '+c.num_ext:'',c.num_int?'Int. '+c.num_int:'',c.colonia?'Col. '+c.colonia:'',c.cp?'C.P. '+c.cp:'',c.mpio].filter(Boolean).join(', ');
+    up(document.getElementById('p-dom-comp'), dom);
+  }
+  cerrarPickerContacto();
+}
+
+// ══ PROPERTY PICKER ══════════════════════════════════════════════════════════
+const SB_URL_P = 'https://urtgysmtnvoqaljuhntz.supabase.co';
+const SB_KEY_P = 'sb_publishable_EVGLfmHVorBpQQWAh-vypA_hANNk_-i';
+
+async function abrirPickerInmueble(contexto) {
+  propPickerContexto = contexto;
+  document.getElementById('pick-prop-list').innerHTML = '<div class="pick-empty">Cargando...</div>';
+  document.getElementById('pick-prop-search').value = '';
+  document.getElementById('pick-prop-ov').classList.add('open');
+  const token = localStorage.getItem('sb_token') || sessionStorage.getItem('sb_token');
+  if (!token) {
+    document.getElementById('pick-prop-list').innerHTML = '<div class="pick-empty">Inicia sesión en Brokr para ver tus inmuebles.</div>';
+    return;
+  }
+  try {
+    const r = await fetch(`${SB_URL_P}/rest/v1/propiedades?order=created_at.desc&limit=100&select=*`, {
+      headers: { 'apikey': SB_KEY_P, 'Authorization': `Bearer ${token}` }
+    });
+    if (!r.ok) throw new Error('Error ' + r.status);
+    window._brokrProps = await r.json();
+    renderPickerInmuebles('');
+  } catch(e) {
+    document.getElementById('pick-prop-list').innerHTML = `<div class="pick-empty">Error al cargar inmuebles: ${e.message}</div>`;
+  }
+}
+function cerrarPickerInmueble() { document.getElementById('pick-prop-ov').classList.remove('open'); }
+
+function renderPickerInmuebles(q) {
+  const props = (window._brokrProps||[]).filter(p=>!q||(p.titulo+p.colonia+p.ciudad+'').toLowerCase().includes(q.toLowerCase()));
+  const lista = document.getElementById('pick-prop-list');
+  if (!props.length) { lista.innerHTML='<div class="pick-empty">Sin inmuebles o sin coincidencias.</div>'; return; }
+  lista.innerHTML = props.map(p => {
+    const opCls = p.operacion==='venta'?'badge-venta':'badge-renta';
+    const precio = p.precio ? ' · $'+Number(p.precio).toLocaleString('es-MX') : '';
+    return `<div class="prop-pick-item" onclick="seleccionarInmueble('${p.id}')">
+      <div class="prop-pick-name"><span class="prop-pick-badge ${opCls}">${p.operacion||''}</span>${p.titulo||'Sin nombre'}</div>
+      <div class="prop-pick-sub">📍 ${[p.colonia,p.ciudad].filter(Boolean).join(', ')}${precio}</div>
+    </div>`;
+  }).join('');
+}
+
+function seleccionarInmueble(id) {
+  const p = (window._brokrProps||[]).find(x=>x.id===id);
+  if (!p) return;
+  const up = (el,v)=>{if(el)el.value=(v||'').toUpperCase();};
+  const sv = (el,v)=>{if(el)el.value=v||'';};
+  if (propPickerContexto === 'arrendamiento') {
+    up(document.getElementById('a-calle-inm'), p.calle||p.direccion);
+    up(document.getElementById('a-numext-inm'), p.num_exterior||p.numero_exterior);
+    up(document.getElementById('a-numint-inm'), p.num_interior||p.numero_interior);
+    up(document.getElementById('a-colonia'), p.colonia);
+    sv(document.getElementById('a-cp'), p.cp||p.codigo_postal);
+    up(document.getElementById('a-mpio-inm'), [p.colonia,p.ciudad].filter(Boolean).join(', '));
+    if (p.precio) {
+      const el = document.getElementById('a-renta');
+      if(el){el.value=Number(p.precio).toLocaleString('es-MX',{minimumFractionDigits:2});if(typeof onRentaChange==='function')onRentaChange(el);}
+    }
+  } else {
+    up(document.getElementById('p-dir'),[p.calle||p.direccion,p.num_exterior?'No. '+p.num_exterior:'',p.colonia?'Col. '+p.colonia:''].filter(Boolean).join(', '));
+    up(document.getElementById('p-colonia'), p.colonia);
+    sv(document.getElementById('p-cp'), p.cp||p.codigo_postal);
+    if (p.precio) {
+      const el=document.getElementById('p-precio');
+      if(el){el.value=Number(p.precio).toLocaleString('es-MX');if(typeof fmtMoney==='function')fmtMoney(el);if(typeof calcularSaldo==='function')calcularSaldo();}
+    }
+  }
+  cerrarPickerInmueble();
+}
+
 window.addEventListener('message', function(e) {
   const d = e.data;
   if (!d || d.tipo !== 'llenar_contrato') return;
@@ -1576,5 +1772,35 @@ window.addEventListener('message', function(e) {
 });
 
 </script>
+
+<!-- ══ CONTACT PICKER MODAL ══ -->
+<div class="pick-overlay" id="pick-contact-ov" onclick="if(event.target===this)cerrarPickerContacto()">
+  <div class="pick-sheet">
+    <div class="pick-handle"></div>
+    <div class="pick-head">
+      <div class="pick-head-title" id="pick-contact-title">Seleccionar contacto</div>
+      <button class="pick-close" onclick="cerrarPickerContacto()">✕</button>
+    </div>
+    <div class="pick-search">
+      <input id="pick-contact-search" type="search" placeholder="Buscar contacto..." oninput="renderPickerContactos(this.value)"/>
+    </div>
+    <div class="pick-list" id="pick-contact-list"></div>
+  </div>
+</div>
+
+<!-- ══ PROPERTY PICKER MODAL ══ -->
+<div class="pick-overlay" id="pick-prop-ov" onclick="if(event.target===this)cerrarPickerInmueble()">
+  <div class="pick-sheet">
+    <div class="pick-handle"></div>
+    <div class="pick-head">
+      <div class="pick-head-title">Seleccionar inmueble</div>
+      <button class="pick-close" onclick="cerrarPickerInmueble()">✕</button>
+    </div>
+    <div class="pick-search">
+      <input id="pick-prop-search" type="search" placeholder="Buscar inmueble..." oninput="renderPickerInmuebles(this.value)"/>
+    </div>
+    <div class="pick-list" id="pick-prop-list"></div>
+  </div>
+</div>
 </body>
 </html>
