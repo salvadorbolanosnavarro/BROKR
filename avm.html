@@ -771,120 +771,25 @@
 
         return (
           <div className="avm-body">
-
-            <div className="ia-hero">
-              <div className="ia-hero-lbl">Valor comercial estimado</div>
-              <div className="ia-hero-val">{fmtMXN(resultado.valor_estimado)}</div>
-              <div className="ia-hero-range">
-                Rango: {fmtMXN(resultado.valor_minimo)} — {fmtMXN(resultado.valor_maximo)}
-              </div>
-              <span className={confClass(confianza)}>Confianza {confianza}</span>
-              {vpm > 0 && (
-                <div className="ia-uvm">
-                  Valor unitario: <strong>{fmtMXN(vpm)}/m²</strong>
-                </div>
-              )}
-            </div>
-
-            <div className="avm-card">
-              <div className="card-label">Resumen ejecutivo</div>
-              <p style={{ fontSize: 13, color: "var(--gray-600)", lineHeight: 1.7 }}>
-                {resultado.resumen_ejecutivo}
-              </p>
-            </div>
-
-            {comparables.length > 0 && (
-              <div className="avm-card">
-                <div className="card-label">Comparables encontrados en el mercado</div>
-                {comparables.map((c, i) => (
-                  <div key={i} className="comp-row">
-                    <div className="comp-row-desc">{c.descripcion}</div>
-                    <div className="comp-row-right">
-                      <div className="comp-row-precio">{fmtMXN(c.precio)}</div>
-                      <div className="comp-row-m2">{c.superficie_m2} m² · {fmtMXN(c.precio_m2)}/m²</div>
-                      <div className="comp-row-src">{c.fuente}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {factores.length > 0 && (
-              <div className="avm-card">
-                <div className="card-label">Factores de homologación</div>
-                {factores.map((f, i) => (
-                  <div key={i} className="factor-row-ia">
-                    <div className="factor-dot" style={{ background: dotColor(f.impacto) }} />
-                    <div style={{ flex: 1 }}>
-                      <div className="factor-nombre">{f.factor}</div>
-                      <div className="factor-desc">{f.descripcion}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {resultado.analisis_zona && (
-              <div className="avm-card">
-                <div className="card-label">Análisis de zona y plusvalía</div>
-                <p style={{ fontSize: 12, color: "var(--gray-600)", lineHeight: 1.7 }}>{resultado.analisis_zona}</p>
-              </div>
-            )}
-
-            {recs.length > 0 && (
-              <div className="avm-card">
-                <div className="card-label">Recomendaciones</div>
-                {recs.map((r, i) => (
-                  <div key={i} style={{ display:"flex", gap:8, marginBottom:6, fontSize:12, color:"var(--text)", alignItems:"flex-start" }}>
-                    <span style={{ color:"var(--teal)", fontWeight:700, flexShrink:0 }}> </span>
-                    <span style={{ lineHeight:1.5 }}>{r}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {resultado.advertencias && (
-              <div className="alert warn" style={{ marginBottom: 14 }}>
-                <strong>Nota:</strong> {resultado.advertencias}
-              </div>
-            )}
-
-            <button className="btn-pdf no-print" onClick={() => { setOpinionMode(true); window.scrollTo(0,0); }}>
-              📄 Ver y editar opinión completa
+            <button className="btn-pdf" onClick={() => { setOpinionMode(true); window.scrollTo(0,0); }}>
+              Vista previa editable
             </button>
-
-            <button className="btn-pdf no-print" style={{ background: "var(--navy-mid)", marginTop: 8 }} onClick={descargarPDF} disabled={pdfLoading}>
-              {pdfLoading ? <><div className="spinner" />Generando PDF...</> : "⬇️ Descargar PDF (backend)"}
-            </button>
-
-            <button className="btn-primary outline no-print" style={{ marginTop: 10 }}
+            <button className="btn-primary outline" style={{ marginTop: 10 }}
               onClick={() => { setEstado("idle"); setResultado(null); setOpinionMode(false); }}>
               Nueva valuación
             </button>
 
-            {/* ── OPINIÓN DE VALOR EDITABLE ── */}
             {opinionMode && (() => {
               const fmtMXN2 = (n) => "$" + Math.round(n || 0).toLocaleString("es-MX");
               const defaultResumen = resultado.resumen_ejecutivo || "";
               const defaultAnalisis = resultado.analisis_zona || "";
-              const defaultConclusiones = `Con base en el análisis comparativo realizado mediante búsqueda en tiempo real de portales inmobiliarios, se determina que el valor comercial de ${form.tipo === "terreno" ? "el terreno" : "la propiedad"} ubicada en ${form.colonia}${form.ciudad ? ", " + form.ciudad : ""}, al día de hoy, asciende a la cantidad de ${fmtMXN2(resultado.valor_estimado)} (${Math.round(resultado.valor_estimado || 0).toLocaleString("es-MX")} pesos 00/100 M.N.), con un nivel de confianza ${resultado.nivel_confianza || "media"}.`;
+              const defaultConclusiones = `Con base en el análisis de los comparables de mercado y aplicando el criterio pericial de nuestra inteligencia artificial, que evalúa las condiciones del inmueble, su entorno y los datos obtenidos, se determina que el valor comercial de ${form.tipo === "terreno" ? "el terreno" : "la propiedad"} ubicada en ${form.colonia}${form.ciudad ? ", " + form.ciudad : ""}, al día de hoy, asciende a la cantidad de ${fmtMXN2(resultado.valor_estimado)} (${Math.round(resultado.valor_estimado || 0).toLocaleString("es-MX")} pesos 00/100 M.N.).`;
               return (
                 <div style={{ marginTop: 14 }}>
-                  <div className="no-print avm-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13 }}>📄 Opinión de Valor — edita y descarga</div>
-                      <div style={{ fontSize: 11, color: "var(--gray-400)", marginTop: 2 }}>Los campos con borde punteado son editables. Luego imprime o guarda como PDF.</div>
-                    </div>
-                    <button className="btn-print" onClick={() => window.print()}>🖨️ Imprimir / PDF</button>
-                  </div>
-
                   <div className="opinion-page">
 
                     <div className="opinion-header-bar">
-                      <div>
-                        <div className="opinion-logo">BROKR<span style={{ color: "var(--teal)" }}>®</span></div>
-                        <div className="opinion-doc-title">Opinión de Valor</div>
-                      </div>
+                      <div className="opinion-doc-title">Opinión de Valor</div>
                       <div className="opinion-meta">
                         <div>Fecha: {new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}</div>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -896,9 +801,9 @@
 
                     <div className="opinion-section">
                       <div className="opinion-section-title">Datos del solicitante</div>
-                      <div className="opinion-grid">
-                        <div><div className="opinion-field-label">Nombre</div><input className="opinion-input-inline" value={opFields.solicitante} onChange={e => uof("solicitante", e.target.value)} placeholder="Nombre del cliente" /></div>
-                        <div><div className="opinion-field-label">Empresa / Institución</div><input className="opinion-input-inline" value={opFields.empresa} onChange={e => uof("empresa", e.target.value)} placeholder="Empresa (opcional)" /></div>
+                      <div>
+                        <div className="opinion-field-label">Nombre del cliente</div>
+                        <input className="opinion-input-inline" value={opFields.solicitante} onChange={e => uof("solicitante", e.target.value)} placeholder="Nombre del cliente" />
                       </div>
                     </div>
 
@@ -925,13 +830,12 @@
                       <div className="opinion-valor-sub">
                         Rango: {fmtMXN2(resultado.valor_minimo)} — {fmtMXN2(resultado.valor_maximo)}
                         {resultado.valor_por_m2 > 0 && ` · ${fmtMXN2(resultado.valor_por_m2)}/m²`}
-                        {" · "}Confianza: <strong style={{ color: "white" }}>{resultado.nivel_confianza}</strong>
                       </div>
                     </div>
 
                     <div className="opinion-section">
                       <div className="opinion-section-title">
-                        <span>Resumen ejecutivo</span>
+                        <span>Resumen</span>
                         {opFields.resumen !== null && <button className="no-print" onClick={() => uof("resumen", null)} style={{ background: "none", border: "none", fontSize: 10, color: "var(--teal)", cursor: "pointer", fontFamily: "'Poppins',sans-serif" }}>↺ Restaurar</button>}
                       </div>
                       <textarea className="opinion-editable" value={opFields.resumen !== null ? opFields.resumen : defaultResumen} onChange={e => uof("resumen", e.target.value)} />
@@ -999,11 +903,6 @@
                     )}
 
                     <div className="opinion-section">
-                      <div className="opinion-section-title">Observaciones adicionales</div>
-                      <textarea className="opinion-editable" value={opFields.observaciones} onChange={e => uof("observaciones", e.target.value)} placeholder="Descripción del entorno, acceso, infraestructura, condiciones específicas del bien, etc." />
-                    </div>
-
-                    <div className="opinion-section">
                       <div className="opinion-section-title">
                         <span>Conclusiones y determinación de valor</span>
                         {opFields.conclusiones !== null && <button className="no-print" onClick={() => uof("conclusiones", null)} style={{ background: "none", border: "none", fontSize: 10, color: "var(--teal)", cursor: "pointer", fontFamily: "'Poppins',sans-serif" }}>↺ Restaurar</button>}
@@ -1011,15 +910,14 @@
                       <textarea className="opinion-editable" style={{ minHeight: 110 }} value={opFields.conclusiones !== null ? opFields.conclusiones : defaultConclusiones} onChange={e => uof("conclusiones", e.target.value)} />
                     </div>
 
-                    <div className="opinion-section">
-                      <div className="opinion-section-title">Elaboró</div>
-                      <div className="opinion-firma">
-                        <div><div className="opinion-firma-label">Nombre del valuador</div><input className="opinion-input-inline" style={{ marginTop: 4 }} value={opFields.valuador} onChange={e => uof("valuador", e.target.value)} placeholder="Nombre completo" /></div>
-                        <div><div className="opinion-firma-label">Cédula / Registro</div><input className="opinion-input-inline" style={{ marginTop: 4 }} value={opFields.cedula} onChange={e => uof("cedula", e.target.value)} placeholder="No. de cédula o registro" /></div>
-                      </div>
-                      <div style={{ marginTop: 20, fontSize: 10, color: "var(--gray-400)", borderTop: "1px solid var(--gray-200)", paddingTop: 10, lineHeight: 1.6 }}>
-                        Esta opinión de valor es un estimado con fines informativos generado mediante análisis de mercado asistido por inteligencia artificial. No sustituye a un avalúo formal realizado por perito valuador certificado ante la autoridad competente.
-                      </div>
+                    <div className="no-print" style={{ marginTop: 20, textAlign: "center" }}>
+                      <button style={{ padding: "12px 40px", background: "var(--navy)", color: "white", border: "none", borderRadius: 12, fontSize: 13, fontWeight: 700, fontFamily: "'Poppins',sans-serif", cursor: "pointer" }} onClick={() => window.print()}>
+                        Descargar
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: 28, paddingTop: 12, borderTop: "1px solid var(--gray-200)", textAlign: "center", fontSize: 10, color: "var(--gray-400)", letterSpacing: "0.3px" }}>
+                      Powered by Brokr by Grupo Navarro
                     </div>
 
                   </div>
