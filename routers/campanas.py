@@ -226,8 +226,6 @@ async def meta_ads_config():
 
 @router.get("/meta-ads/callback")
 async def meta_ads_callback(code: str, redirect_uri: str):
-  @router.get("/meta-ads/callback")
-async def meta_ads_callback(code: str, redirect_uri: str):
     app_id, app_secret, status = _meta_credentials()
 
     if not app_id or not app_secret:
