@@ -16,6 +16,7 @@ router = APIRouter()
 
 TIPO_CAMBIO_MXN_USD = 17.5
 META_GRAPH      = "https://graph.facebook.com/v19.0"
+CONFIG_FILE = Path(__file__).resolve().parent.parent / "config.json"
 
 OBJETIVO_MAP = {
     "Conseguir leads":         "OUTCOME_LEADS",
@@ -38,7 +39,41 @@ ERRORES_META = {
     1487297: "La imagen no cumple los requisitos: mínimo 600×314 px, máximo 30 MB.",
     17:      "Límite de llamadas a la API alcanzado. Espera unos minutos e intenta de nuevo.",
 }
+def _load_config() -> dict:
+    try:
+        if CONFIG_FILE.exists():
+            return json.loads(CONFIG_FILE.read_text())
+    except Exception:
+        pass
+    return {}
 
+
+def _read_secret(env_name: str, config_name: str) -> tuple[str, str]:
+    value = os.environ.get(env_name, "")
+    if value and value.strip():
+        return value.strip(), "env"
+
+    config = _load_config()
+    value = str(config.get(config_name, "") or "")
+    if value and value.strip():
+        return value.strip(), "config.json"
+
+    return "", "missing"
+
+
+def _meta_credentials() -> tuple[str, str, dict]:
+    app_id, app_id_source = _read_secret("META_APP_ID", "meta_app_id")
+    app_secret, app_secret_source = _read_secret("META_APP_SECRET", "meta_app_secret")
+
+    status = {
+        "meta_app_id_configured": bool(app_id),
+        "meta_app_secret_configured": bool(app_secret),
+        "meta_app_id_source": app_id_source,
+        "meta_app_secret_source": app_secret_source,
+    }
+
+    return app_id, app_secret, status
+    
 def _meta_error(data: dict) -> str:
     err = data.get("error", {})
     code = err.get("code", 0)
@@ -180,13 +215,31 @@ async def crear_campana(req: CampanaRequest):
 
 
 # ── Meta Ads OAuth helpers ──────────────────────────────────────────────────────
+@router.get("/meta-ads/config")
+async def meta_ads_config():
+    app_id, _app_secret, status = _meta_credentials()
+    return {
+        **status,
+        "meta_app_id_last4": app_id[-4:] if app_id else "",
+        "graph_api_version": META_GRAPH.rsplit("/", 1)[-1],
+    }
 
 @router.get("/meta-ads/callback")
 async def meta_ads_callback(code: str, redirect_uri: str):
-    app_id     = os.environ.get("META_APP_ID", "")
-    app_secret = os.environ.get("META_APP_SECRET", "")
+  @router.get("/meta-ads/callback")
+async def meta_ads_callback(code: str, redirect_uri: str):
+    app_id, app_secret, status = _meta_credentials()
+
     if not app_id or not app_secret:
-        raise HTTPException(status_code=500, detail="META_APP_ID o META_APP_SECRET no están configurados en el servidor.")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "META_APP_ID o META_APP_SECRET no están disponibles para este proceso del backend.",
+                "diagnostico": status,
+                "accion": "Abre /meta-ads/config en la misma URL del backend que usa la app y confirma que ambas aparezcan como configured=true.",
+            },
+        )
+
     async with httpx.AsyncClient(timeout=20) as client:
         r = await client.get(f"{META_GRAPH}/oauth/access_token", params={
             "client_id":     app_id,
@@ -194,10 +247,13 @@ async def meta_ads_callback(code: str, redirect_uri: str):
             "redirect_uri":  redirect_uri,
             "code":          code,
         })
+
         d = r.json()
+
         if not r.is_success or "access_token" not in d:
             msg = d.get("error", {}).get("message", "No se pudo completar la autorización con Meta.")
             raise HTTPException(status_code=400, detail=msg)
+
         return {"access_token": d["access_token"]}
 
 
