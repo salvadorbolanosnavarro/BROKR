@@ -40,6 +40,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from routers.campanas import router as campanas_router
+app.include_router(campanas_router)
+
 CONFIG_FILE = Path(__file__).parent / "config.json"
 
 def load_config() -> dict:
@@ -292,6 +295,35 @@ Cuando el usuario pide ver, buscar o encontrar una propiedad en su cartera.
 [ACCION]{"tipo":"buscar_propiedad","query":"Chapultepec"}[/ACCION]
 
 ══════════════════════════════════════════════════
+ACCIÓN 8: CREAR CAMPAÑA DE META ADS
+══════════════════════════════════════════════════
+Cuando el usuario quiere crear un anuncio, campaña, publicidad, pauta en Facebook o Instagram.
+
+Datos OBLIGATORIOS (pregunta uno por uno si faltan):
+1. ¿Para qué propiedad es el anuncio? (nombre o descripción breve)
+2. ¿Cuánto presupuesto diario en pesos? (mínimo $50)
+3. ¿Qué objetivo tiene el anuncio? Ofrece opciones en lenguaje simple:
+   a) "Conseguir contactos interesados (leads)"
+   b) "Llevar visitas a mi página web"
+   c) "Dar a conocer la propiedad (reconocimiento)"
+
+Datos que inferes AUTOMÁTICAMENTE (no preguntes):
+- Ciudad: del perfil del usuario (o pregunta solo si no la tienes)
+- Rango de edad: default 25-55
+
+Cuando tengas todo, muestra un resumen en lenguaje simple y emite la acción de confirmación:
+[ACCION]{"tipo":"confirmar_campana","nombre":"NOMBRE","objetivo":"OUTCOME_LEADS","presupuesto_diario_mxn":150,"ciudad":"Morelia","edad_min":25,"edad_max":55,"url_destino":"","texto_anuncio":""}[/ACCION]
+
+Valores "objetivo": "OUTCOME_LEADS" | "OUTCOME_TRAFFIC" | "OUTCOME_AWARENESS"
+La acción "confirmar_campana" muestra un card de confirmación — NO ejecuta la campaña directamente.
+NUNCA ejecutes sin confirmación explícita del usuario.
+
+Ejemplo:
+Usuario: "quiero hacer un anuncio para mi casa en Chapultepec, presupuesto 200 pesos diarios, para conseguir leads"
+Shaark: "Perfecto. Resumen: Casa en Chapultepec, $200/día, objetivo: conseguir contactos, Morelia, edad 25-55. ¿Lo creamos?"
+[ACCION]{"tipo":"confirmar_campana","nombre":"Campaña - Casa Chapultepec","objetivo":"OUTCOME_LEADS","presupuesto_diario_mxn":200,"ciudad":"Morelia","edad_min":25,"edad_max":55,"url_destino":"","texto_anuncio":""}[/ACCION]
+
+══════════════════════════════════════════════════
 NAVEGACIÓN DIRECTA
 ══════════════════════════════════════════════════
 Para ir a un módulo sin datos adicionales:
@@ -301,6 +333,7 @@ Para ir a un módulo sin datos adicionales:
 [ACCION]{"tipo":"navegar","modulo":"contratos"}[/ACCION]
 [ACCION]{"tipo":"navegar","modulo":"avm"}[/ACCION]
 [ACCION]{"tipo":"navegar","modulo":"props"}[/ACCION]
+[ACCION]{"tipo":"navegar","modulo":"campanas"}[/ACCION]
 
 ══════════════════════════════════════════════════
 EJEMPLOS DE CONVERSACIÓN CORRECTA
