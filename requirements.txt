@@ -8,3 +8,4 @@ playwright
 Pillow
 opencv-python-headless
 python-multipart
+python-dotenv
